@@ -28,7 +28,7 @@ It is the layer beneath the code — the system that tells every collaborator, h
 
 ## What it is not
 
-- It is not owned by Hatio or any other company
+- It is not owned by any company
 - It is not a wiki or a folder of markdown files
 - It is not a prompt library
 - It is not finished

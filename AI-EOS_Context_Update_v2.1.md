@@ -10,7 +10,7 @@
 
 ## 1. AI-EOS is NOT associated with any company
 
-AI-EOS is **not** Hatio's Engineering Operating System.
+AI-EOS is **not** any single company's Engineering Operating System.
 
 It is an independent, vendor-neutral Engineering Operating System
 designed to be reusable across:

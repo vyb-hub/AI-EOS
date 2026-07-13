@@ -1,14 +1,14 @@
 # AI-EOS — Full Context Document
 **Version:** 1.0  
 **Date:** June 2026  
-**Author:** Vybhav Kumar (Founder, Hatio)  
+**Author:** Vybhav Kumar (Founder)  
 **Purpose:** Complete context for AI collaborators (ChatGPT, Claude Code) to consume and operate within.
 
 ---
 
 ## 1. What is AI-EOS
 
-AI-EOS (AI-Powered Engineering Operating System) is the governance layer that defines how engineering is done at Hatio. It is not application code. It is the system beneath the code — the philosophy, processes, roles, documentation standards, templates, and decision frameworks that govern how every collaborator (human or AI) operates.
+AI-EOS (AI-Powered Engineering Operating System) is the governance layer that defines how engineering gets done. It is not application code. It is the system beneath the code — the philosophy, processes, roles, documentation standards, templates, and decision frameworks that govern how every collaborator (human or AI) operates.
 
 The core premise: most engineering teams run on implicit rules that live in people's heads and erode when anyone leaves. AI-EOS makes those rules explicit, versioned, and shareable — in a form that both humans and AI agents can consume and act on.
 

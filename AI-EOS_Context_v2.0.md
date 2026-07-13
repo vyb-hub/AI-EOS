@@ -11,7 +11,7 @@
 
 | # | Correction / Addition |
 |---|----------------------|
-| C-01 | **Critical:** AI-EOS is not associated with Hatio or any company. It is independent and vendor-neutral. |
+| C-01 | **Critical:** AI-EOS is not associated with any company. It is independent and vendor-neutral. |
 | C-02 | **Critical:** AI-EOS is an Operating System, not documentation. Documentation is one artifact it produces. |
 | A-01 | Added: Four Knowledge Domains |
 | A-02 | Added: Founder Knowledge Principle |
