@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI-EOS Runtime — Roadmap v1.0</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-elevated: #f6f6f8;
+    --bg-card: #ffffff;
+    --border: rgba(15, 15, 20, 0.10);
+    --border-strong: rgba(15, 15, 20, 0.18);
+    --text: #14141a;
+    --text-muted: #55565f;
+    --text-faint: #8a8b93;
+    --accent: #5b5bf0;
+    --accent-2: #b13bd6;
+    --shadow: 0 20px 60px -20px rgba(15,15,25,0.15);
+    --code-bg: #f0f0f4;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #08080c;
+      --bg-elevated: #0f0f16;
+      --bg-card: #111118;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.16);
+      --text: #f2f2f6;
+      --text-muted: #a7a8b3;
+      --text-faint: #6c6d78;
+      --accent: #8b8bff;
+      --accent-2: #e068f0;
+      --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+      --code-bg: #16161f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #08080c;
+    --bg-elevated: #0f0f16;
+    --bg-card: #111118;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #f2f2f6;
+    --text-muted: #a7a8b3;
+    --text-faint: #6c6d78;
+    --accent: #8b8bff;
+    --accent-2: #e068f0;
+    --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+    --code-bg: #16161f;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff;
+    --bg-elevated: #f6f6f8;
+    --bg-card: #ffffff;
+    --border: rgba(15, 15, 20, 0.10);
+    --border-strong: rgba(15, 15, 20, 0.18);
+    --text: #14141a;
+    --text-muted: #55565f;
+    --text-faint: #8a8b93;
+    --accent: #5b5bf0;
+    --accent-2: #b13bd6;
+    --shadow: 0 20px 60px -20px rgba(15,15,25,0.15);
+    --code-bg: #f0f0f4;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Nav ---------- */
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(16px) saturate(160%);
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; max-width: 1080px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; font-size: 15px; }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--accent); }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--border-strong); color: var(--text-muted); letter-spacing: 0.02em;
+  }
+  .theme-toggle {
+    border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text);
+    border-radius: 999px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px; transition: transform 0.15s ease, background 0.2s ease;
+  }
+  .theme-toggle:hover { transform: scale(1.06); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 88px 0 56px; text-align: center; position: relative; }
+  .hero::before {
+    content: ""; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+    width: 900px; height: 420px; pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%);
+    filter: blur(10px);
+    z-index: -1;
+  }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 18px;
+  }
+  h1.title {
+    font-size: clamp(34px, 6vw, 60px); font-weight: 720; letter-spacing: -0.03em; margin: 0 0 20px;
+    background: linear-gradient(135deg, var(--text) 20%, var(--accent) 75%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { font-size: clamp(16px, 2.2vw, 20px); color: var(--text-muted); max-width: 680px; margin: 0 auto 28px; }
+  .hero-meta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  section { padding: 64px 0; border-top: 1px solid var(--border); }
+  section.hero, section:first-of-type { border-top: none; }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 44px; }
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .section-title { font-size: clamp(24px, 4vw, 34px); font-weight: 680; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .section-desc { color: var(--text-muted); font-size: 16px; }
+
+  /* ---------- Architecture diagram ---------- */
+  .diagram-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+    padding: 36px 20px; box-shadow: var(--shadow); overflow-x: auto;
+  }
+  .diagram-caption { text-align: center; color: var(--text-faint); font-size: 13px; margin-top: 18px; }
+
+  /* ---------- Domains ---------- */
+  .domains { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 760px) { .domains { grid-template-columns: 1fr; } }
+  .domain-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+    position: relative; overflow: hidden;
+  }
+  .domain-card::before {
+    content: ""; position: absolute; inset: 0; opacity: 0.55; pointer-events: none;
+    background: radial-gradient(600px 200px at 20% -10%, var(--accent-fade, transparent), transparent);
+  }
+  .domain-card.product { --accent-fade: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .domain-card.engineering { --accent-fade: color-mix(in srgb, var(--accent-2) 16%, transparent); }
+  .domain-kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+  .domain-name { font-size: 22px; font-weight: 680; margin: 6px 0 10px; letter-spacing: -0.01em; }
+  .domain-desc { color: var(--text-muted); font-size: 14.5px; margin-bottom: 18px; }
+  .domain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .domain-list li {
+    font-size: 14px; color: var(--text); padding: 9px 12px; border-radius: 10px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+  }
+  .domain-list li.gate {
+    border-color: var(--accent); color: var(--accent); font-weight: 650;
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-elevated));
+  }
+  .domain-arrow { display: flex; align-items: center; justify-content: center; margin: -4px 0 22px; color: var(--text-faint); font-size: 13px; gap: 8px; }
+
+  /* ---------- Timeline ---------- */
+  .timeline { position: relative; max-width: 880px; margin: 0 auto; }
+  .timeline::before {
+    content: ""; position: absolute; left: 27px; top: 6px; bottom: 6px; width: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    opacity: 0.35;
+  }
+  @media (max-width: 640px) { .timeline::before { left: 17px; } }
+
+  .phase {
+    position: relative; padding-left: 72px; margin-bottom: 28px;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .phase.in-view { opacity: 1; transform: translateY(0); }
+  @media (max-width: 640px) { .phase { padding-left: 48px; } }
+
+  .phase-node {
+    position: absolute; left: 12px; top: 4px; width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    box-shadow: 0 0 0 5px var(--bg), 0 4px 16px -4px rgba(0,0,0,0.4);
+  }
+  @media (max-width: 640px) { .phase-node { left: 2px; width: 28px; height: 28px; font-size: 12px; } }
+
+  .phase-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .phase-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .phase-title { font-size: 19px; font-weight: 660; letter-spacing: -0.01em; }
+  .phase-status {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .status-current { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+  .status-planned { background: var(--bg-elevated); color: var(--text-faint); border: 1px solid var(--border-strong); }
+
+  .phase-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip {
+    font-size: 13px; padding: 6px 12px; border-radius: 10px; background: var(--bg-elevated);
+    border: 1px solid var(--border); color: var(--text-muted);
+  }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 48px 0 72px; text-align: center; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border); }
+  footer a { color: var(--text-muted); }
+  .footer-title { color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  code.inline { background: var(--code-bg); border-radius: 6px; padding: 2px 6px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="dot"></span> AI-EOS Runtime</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="badge">v1.0 · Proposed</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Runtime Roadmap · Documentation Only</div>
+    <h1 class="title">From Specification<br/>to Execution Engine</h1>
+    <p class="subtitle">
+      AI-EOS is an AI-native Operating System for transforming ideas into products, and products
+      into production software — Product OS and Engineering OS, carried end to end by a single Runtime.
+    </p>
+    <div class="hero-meta">
+      <span class="badge">Documentation only</span>
+      <span class="badge">No implementation authorized</span>
+      <span class="badge">9 phases</span>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Long-Term Architecture</div>
+      <h2 class="section-title">The Founder never talks to a model directly</h2>
+      <p class="section-desc">Every step is mediated by the Runtime. Models are interchangeable behind Roles; the chain below is not.</p>
+    </div>
+    <div class="diagram-card">
+      <svg id="archSvg" viewBox="0 0 920 240" width="100%" style="display:block; min-width:640px;">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--text-faint)"></path>
+          </marker>
+          <linearGradient id="nodeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="var(--accent)"></stop>
+            <stop offset="100%" stop-color="var(--accent-2)"></stop>
+          </linearGradient>
+        </defs>
+        <!-- connecting line -->
+        <line x1="70" y1="120" x2="850" y2="120" stroke="var(--border-strong)" stroke-width="2" stroke-dasharray="4 6"></line>
+
+        <!-- nodes -->
+        <g font-family="-apple-system, sans-serif">
+          <!-- Founder -->
+          <g transform="translate(20,90)">
+            <rect width="100" height="60" rx="14" fill="var(--bg-elevated)" stroke="var(--border-strong)"></rect>
+            <text x="50" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="var(--text)">Founder</text>
+          </g>
+          <line x1="120" y1="120" x2="158" y2="120" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <!-- Runtime -->
+          <g transform="translate(160,80)">
+            <rect width="110" height="80" rx="16" fill="url(#nodeGrad)"></rect>
+            <text x="55" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">AI-EOS</text>
+            <text x="55" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Runtime</text>
+          </g>
+          <line x1="270" y1="120" x2="308" y2="120" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <!-- Workflow Engine -->
+          <g transform="translate(310,90)">
+            <rect width="120" height="60" rx="14" fill="var(--bg-card)" stroke="var(--border-strong)"></rect>
+            <text x="60" y="27" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Workflow</text>
+            <text x="60" y="42" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Engine</text>
+          </g>
+          <line x1="430" y1="120" x2="468" y2="120" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <!-- Stage Router -->
+          <g transform="translate(470,90)">
+            <rect width="110" height="60" rx="14" fill="var(--bg-card)" stroke="var(--border-strong)"></rect>
+            <text x="55" y="27" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Stage</text>
+            <text x="55" y="42" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Router</text>
+          </g>
+          <line x1="580" y1="120" x2="618" y2="120" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <!-- Role Engine -->
+          <g transform="translate(620,90)">
+            <rect width="110" height="60" rx="14" fill="var(--bg-card)" stroke="var(--border-strong)"></rect>
+            <text x="55" y="27" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Role</text>
+            <text x="55" y="42" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Engine</text>
+          </g>
+          <line x1="730" y1="120" x2="768" y2="120" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <!-- Provider SDK -->
+          <g transform="translate(770,90)">
+            <rect width="120" height="60" rx="14" fill="var(--bg-elevated)" stroke="var(--border-strong)"></rect>
+            <text x="60" y="27" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">Provider</text>
+            <text x="60" y="42" text-anchor="middle" font-size="12" font-weight="650" fill="var(--text)">SDK</text>
+          </g>
+        </g>
+
+        <!-- providers row -->
+        <g font-family="-apple-system, sans-serif">
+          <line x1="825" y1="150" x2="825" y2="180" stroke="var(--text-faint)" stroke-width="2" marker-end="url(#arrow)"></line>
+          <g transform="translate(640,190)">
+            <rect width="370" height="42" rx="21" fill="none" stroke="var(--border-strong)" stroke-dasharray="3 5"></rect>
+            <text x="185" y="27" text-anchor="middle" font-size="12" fill="var(--text-muted)">OpenAI · Anthropic · Gemini · future providers</text>
+          </g>
+        </g>
+      </svg>
+      <p class="diagram-caption">Founder → AI-EOS Runtime → Workflow Engine → Stage Router → Role Engine → Provider SDK → Underlying AI Providers</p>
+    </div>
+  </div>
+</section>
+
+<section id="domains">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Two Domains</div>
+      <h2 class="section-title">Product OS, then Engineering OS</h2>
+      <p class="section-desc">No implementation occurs in Product OS. Engineering begins only after Product Readiness Review.</p>
+    </div>
+    <div class="domains">
+      <div class="domain-card product">
+        <div class="domain-kicker">Domain 01</div>
+        <div class="domain-name">Product OS</div>
+        <p class="domain-desc">Transforms an idea into an engineering-ready product.</p>
+        <ul class="domain-list">
+          <li>Founder Discovery</li>
+          <li>Market Discovery</li>
+          <li>Product Strategy</li>
+          <li>Business Strategy</li>
+          <li>Validation</li>
+          <li>Product Definition</li>
+          <li>UX Discovery</li>
+          <li>Product Architecture</li>
+          <li class="gate">Product Readiness Review — gate</li>
+        </ul>
+      </div>
+      <div class="domain-card engineering">
+        <div class="domain-kicker">Domain 02</div>
+        <div class="domain-name">Engineering OS</div>
+        <p class="domain-desc">Transforms an approved product into production software.</p>
+        <ul class="domain-list">
+          <li>Engineering Charters</li>
+          <li>Architecture</li>
+          <li>Implementation</li>
+          <li>Reviews</li>
+          <li>Testing</li>
+          <li>Documentation</li>
+          <li>Releases</li>
+          <li>Knowledge Capture</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Rollout Plan</div>
+      <h2 class="section-title">Runtime Roadmap</h2>
+      <p class="section-desc">Nine phases, Phase 0 through Marketplace. Sequencing is planning-stage — no phase beyond Phase 0 is authorized to begin without its own Engineering Charter.</p>
+    </div>
+
+    <div class="timeline" id="timeline">
+      <!-- phases injected by JS -->
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-title">AI-EOS Runtime Roadmap v1.0</div>
+    <p>
+      Companion to <code class="inline">docs/vision/AI-EOS_Runtime_Vision_v1.0.md</code>.
+      Proposed — pending Founder approval and Strategic AI architecture review. Documentation only; no runtime, CLI, or orchestration code is implied by this page.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var PHASES = [
+    {
+      n: 0, title: "Specification", status: "current",
+      note: "Current",
+      items: ["Governance", "Constitution", "Context", "Principles", "Charters"]
+    },
+    {
+      n: 1, title: "Runtime Kernel", status: "planned",
+      items: ["CLI", "Runtime", "Provider SDK", "Workflow Engine", "Approval Engine", "Context Engine"]
+    },
+    {
+      n: 2, title: "Workflow Engine", status: "planned",
+      items: ["Feature Workflow", "Bug Workflow", "Research Workflow", "Release Workflow"]
+    },
+    {
+      n: 3, title: "Context & Memory", status: "planned",
+      items: ["Project Memory", "Conversation Memory", "Knowledge Graph", "ADR Retrieval", "Context Builder"]
+    },
+    {
+      n: 4, title: "Product OS", status: "planned",
+      items: ["Founder Discovery", "Market Discovery", "Product Strategy", "Business Strategy", "Validation", "Product Architecture", "Product Readiness Review"]
+    },
+    {
+      n: 5, title: "Interfaces", status: "planned",
+      items: ["CLI", "Web UI", "REST API", "IDE Extension", "GitHub Integration"]
+    },
+    {
+      n: 6, title: "Team Collaboration", status: "planned",
+      items: ["Shared Projects", "Multi-user", "Shared Knowledge", "Shared Approvals"]
+    },
+    {
+      n: 7, title: "AI-EOS Cloud", status: "planned",
+      items: ["Hosted Runtime", "Team Dashboards", "Shared Memory", "Observability", "Analytics"]
+    },
+    {
+      n: 8, title: "Marketplace", status: "planned",
+      items: ["Plugins", "Provider Adapters", "Industry Packs", "Workflow Packs", "Templates"]
+    }
+  ];
+
+  var container = document.getElementById("timeline");
+  PHASES.forEach(function (p) {
+    var el = document.createElement("div");
+    el.className = "phase";
+    var statusLabel = p.status === "current" ? "Current" : "Planned";
+    var statusClass = p.status === "current" ? "status-current" : "status-planned";
+    el.innerHTML =
+      '<div class="phase-node" style="background: linear-gradient(135deg, var(--accent), var(--accent-2));">' + p.n + '</div>' +
+      '<div class="phase-card">' +
+        '<div class="phase-head">' +
+          '<div class="phase-title">Phase ' + p.n + ' — ' + p.title + '</div>' +
+          '<div class="phase-status ' + statusClass + '">' + statusLabel + '</div>' +
+        '</div>' +
+        '<div class="phase-chips">' +
+          p.items.map(function (i) { return '<span class="chip">' + i + '</span>'; }).join("") +
+        '</div>' +
+      '</div>';
+    container.appendChild(el);
+  });
+
+  // Scroll-reveal
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) entry.target.classList.add("in-view");
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".phase").forEach(function (el) { observer.observe(el); });
+
+  // Theme toggle
+  var root = document.documentElement;
+  var toggle = document.getElementById("themeToggle");
+  var stored = null;
+  try { stored = localStorage.getItem("aieos-theme"); } catch (e) {}
+  if (stored) root.setAttribute("data-theme", stored);
+
+  function currentTheme() {
+    var attr = root.getAttribute("data-theme");
+    if (attr) return attr;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  toggle.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("aieos-theme", next); } catch (e) {}
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -37,13 +37,20 @@ It is the layer beneath the code — the system that tells every collaborator, h
 
 ## Current state
 
-**Phase 0 — Blueprint.**
+**Phase 0 — Blueprint, now focused on Runtime MVP alignment.**
 
 The files here are a deliberate starter pack. The full AI-EOS is envisioned as 80–150 pages of governance, philosophy, and tooling. Nothing has been built against a charter yet. That is correct. The blueprint comes first.
 
-**Active charter:** EC-001 — Bootstrap the Engineering Operating System.
+**Top priority:** Deliver a narrow, local-first AI-EOS Runtime MVP that proves the governed Feature Development flow.
 
-**Proposed charter (pending approval):** EC-002 — Introduce AI-EOS v3, an optional AI Collaboration Framework. See [Parallel track: AI-EOS v3](#parallel-track-ai-eos-v3) below.
+**Latest completed charter:** EC-003 — Build the AI-EOS Runtime MVP.
+
+**Current status:** The local-first Runtime MVP is implemented, verified, and
+Founder-accepted. No new implementation charter is active.
+
+**Next MVP priority:** Product Discovery — transform a raw Founder idea into an
+evidence-backed MVP definition and approved Engineering Charter. The priority is
+recorded in DR-003; implementation requires a new charter.
 
 ---
 
@@ -66,6 +73,11 @@ The files here are a deliberate starter pack. The full AI-EOS is envisioned as 8
 | File | Purpose |
 |------|---------|
 | [`AI-EOS_Context_v2.1.md`](./AI-EOS_Context_v2.1.md) | **Canonical context. Start here.** Load into any AI session. |
+| [`docs/INDEX.md`](./docs/INDEX.md) | Current document status, authority, and approval gates. |
+| [`docs/decisions/DR-001_Runtime_MVP_Priority_v1.0.md`](./docs/decisions/DR-001_Runtime_MVP_Priority_v1.0.md) | Founder decision making the Runtime MVP the top priority. |
+| [`docs/decisions/DR-003_Product_Discovery_Next_MVP_v1.0.md`](./docs/decisions/DR-003_Product_Discovery_Next_MVP_v1.0.md) | Founder decision making Product Discovery the next MVP. |
+| [`docs/charters/EC-003_Runtime_MVP_v1.0.md`](./docs/charters/EC-003_Runtime_MVP_v1.0.md) | Completed Runtime MVP Engineering Charter. |
+| [`docs/architecture/AI-EOS_Runtime_MVP_Architecture_v1.0.md`](./docs/architecture/AI-EOS_Runtime_MVP_Architecture_v1.0.md) | Proposed MVP architecture. |
 | [`AI-EOS_Context_v2.0.md`](./AI-EOS_Context_v2.0.md) | Previous version. Superseded. Preserved for reference. |
 | [`AI-EOS_Context_v1.0.md`](./AI-EOS_Context_v1.0.md) | Original version. Superseded. Preserved for reference. |
 | [`AI-EOS_Context_Update_v2.2.md`](./AI-EOS_Context_Update_v2.2.md) | Source update that produced v2.1 (Documentation-First development & lifecycle governance). |
@@ -113,11 +125,11 @@ It contains: what AI-EOS is, the working model, roles and workflow, core princip
 
 ---
 
-## Parallel track: AI-EOS v3
+## Proposed foundation: AI-EOS v3
 
-AI-EOS v3 is a **proposed, optional** evolution — an AI Collaboration Framework layered on top of everything above. It does not replace AI-EOS v2.x. Both versions are fully supported; a project explicitly selects one (e.g., `aieos init --version=v2` or `--version=v3`, per the CLI proposal).
+AI-EOS v3 is a **proposed** AI Collaboration Framework layered on top of the v2.1 governing baseline. Its useful concepts are under Strategic AI review for conditional adoption by the Runtime MVP. Dual-version initialization and migration are deferred from the MVP.
 
-**Status:** Proposal only, under Charter EC-002. Nothing here is canonical until the Founder and Strategic AI approve it. No v2.x file is altered by this track beyond this README's additive references.
+**Status:** Conditionally adopted for the MVP under the Strategic AI review. Deferred v3 concepts remain proposals and do not independently authorize implementation.
 
 | File | Purpose |
 |------|---------|

@@ -1,0 +1,7 @@
+schemaVersion: 1
+project:
+  name: guided-test
+runtime:
+  provider: codex-cli
+  model: default
+  maxAttempts: 2

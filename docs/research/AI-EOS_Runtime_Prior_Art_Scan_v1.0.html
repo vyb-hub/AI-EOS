@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI-EOS Runtime — Prior-Art Scan v1.0</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-elevated: #f6f6f8;
+    --bg-card: #ffffff;
+    --border: rgba(15, 15, 20, 0.10);
+    --border-strong: rgba(15, 15, 20, 0.18);
+    --text: #14141a;
+    --text-muted: #55565f;
+    --text-faint: #8a8b93;
+    --accent: #5b5bf0;
+    --accent-2: #b13bd6;
+    --warn: #b5560f;
+    --warn-bg: rgba(181, 86, 15, 0.08);
+    --warn-border: rgba(181, 86, 15, 0.35);
+    --shadow: 0 20px 60px -20px rgba(15,15,25,0.15);
+    --code-bg: #f0f0f4;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #08080c;
+      --bg-elevated: #0f0f16;
+      --bg-card: #111118;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.16);
+      --text: #f2f2f6;
+      --text-muted: #a7a8b3;
+      --text-faint: #6c6d78;
+      --accent: #8b8bff;
+      --accent-2: #e068f0;
+      --warn: #f0a860;
+      --warn-bg: rgba(240, 168, 96, 0.08);
+      --warn-border: rgba(240, 168, 96, 0.3);
+      --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+      --code-bg: #16161f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #08080c; --bg-elevated: #0f0f16; --bg-card: #111118;
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.16);
+    --text: #f2f2f6; --text-muted: #a7a8b3; --text-faint: #6c6d78;
+    --accent: #8b8bff; --accent-2: #e068f0;
+    --warn: #f0a860; --warn-bg: rgba(240, 168, 96, 0.08); --warn-border: rgba(240, 168, 96, 0.3);
+    --shadow: 0 20px 60px -20px rgba(0,0,0,0.6); --code-bg: #16161f;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff; --bg-elevated: #f6f6f8; --bg-card: #ffffff;
+    --border: rgba(15, 15, 20, 0.10); --border-strong: rgba(15, 15, 20, 0.18);
+    --text: #14141a; --text-muted: #55565f; --text-faint: #8a8b93;
+    --accent: #5b5bf0; --accent-2: #b13bd6;
+    --warn: #b5560f; --warn-bg: rgba(181, 86, 15, 0.08); --warn-border: rgba(181, 86, 15, 0.35);
+    --shadow: 0 20px 60px -20px rgba(15,15,25,0.15); --code-bg: #f0f0f4;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(16px) saturate(160%);
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; max-width: 1080px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; font-size: 15px; }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--accent); }
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--text-muted); letter-spacing: 0.02em; white-space: nowrap; }
+  .theme-toggle {
+    border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text);
+    border-radius: 999px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px; transition: transform 0.15s ease;
+  }
+  .theme-toggle:hover { transform: scale(1.06); }
+
+  .hero { padding: 76px 0 48px; text-align: center; position: relative; }
+  .hero::before {
+    content: ""; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+    width: 900px; height: 420px; pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 65%);
+    filter: blur(10px); z-index: -1;
+  }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  h1.title {
+    font-size: clamp(30px, 5.4vw, 52px); font-weight: 720; letter-spacing: -0.03em; margin: 0 0 18px;
+    background: linear-gradient(135deg, var(--text) 20%, var(--accent) 75%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { font-size: clamp(15px, 2vw, 18px); color: var(--text-muted); max-width: 680px; margin: 0 auto 26px; }
+  .hero-meta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--border); }
+  section.hero { border-top: none; padding-top: 0; }
+  .section-head { text-align: center; max-width: 680px; margin: 0 auto 40px; }
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .section-title { font-size: clamp(22px, 3.6vw, 30px); font-weight: 680; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .section-desc { color: var(--text-muted); font-size: 15.5px; }
+
+  /* method table */
+  .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-faint); padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--bg-elevated);
+  }
+  tbody td { padding: 14px 18px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  .stars { color: var(--accent); font-weight: 650; white-space: nowrap; }
+  .table-scroll { overflow-x: auto; }
+
+  /* tool cards */
+  .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  @media (max-width: 760px) { .tools-grid { grid-template-columns: 1fr; } }
+  .tool-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 26px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px;
+  }
+  .tool-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .tool-name { font-size: 16px; font-weight: 660; letter-spacing: -0.01em; }
+  .tool-name a { color: var(--text); }
+  .tool-name a:hover { color: var(--accent); }
+  .tool-stars { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .tool-desc { font-size: 14px; color: var(--text-muted); }
+  .tool-block-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+  .tool-mapping { font-size: 13.5px; color: var(--text); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .tool-caution {
+    font-size: 13.5px; color: var(--warn); background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .tool-caution strong { color: var(--warn); }
+
+  /* cross-cutting patterns */
+  .patterns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 900px) { .patterns { grid-template-columns: 1fr; } }
+  .pattern-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+  .pattern-num {
+    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-size: 12px; font-weight: 700; margin-bottom: 12px;
+  }
+  .pattern-title { font-size: 14.5px; font-weight: 660; margin-bottom: 8px; }
+  .pattern-desc { font-size: 13.5px; color: var(--text-muted); }
+
+  /* not-do / open questions */
+  .list-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 30px; box-shadow: var(--shadow); }
+  .list-card ul, .list-card ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .list-card li { font-size: 14.5px; color: var(--text); }
+  .list-card li::marker { color: var(--accent); font-weight: 700; }
+
+  footer { padding: 44px 0 64px; text-align: center; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border); }
+  .footer-title { color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  code.inline { background: var(--code-bg); border-radius: 6px; padding: 2px 6px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="dot"></span> AI-EOS Runtime</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="badge">v1.0 · Informational</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Prior-Art Scan · Research Only</div>
+    <h1 class="title">Six Tools, Six Mirrors<br/>Held Up to the Runtime</h1>
+    <p class="subtitle">
+      Six trending repositories, studied against the AI-EOS Runtime Vision and Roadmap —
+      not to decide what to adopt, but to check the Runtime's design against working prior art.
+    </p>
+    <div class="hero-meta">
+      <span class="badge">No adoption implied</span>
+      <span class="badge">No security/license review performed</span>
+      <span class="badge">6 repos studied</span>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Method</div>
+      <h2 class="section-title">What was studied</h2>
+      <p class="section-desc">Resolved from partially truncated links, then cross-verified — star counts here are checked against the raw GitHub REST API, not taken from a single source.</p>
+    </div>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Repository</th><th>Stars</th><th>Description</th></tr>
+          </thead>
+          <tbody id="methodTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Per-Tool Findings</div>
+      <h2 class="section-title">What each one does, and what it maps to</h2>
+      <p class="section-desc">Every mapping below points at a specific AI-EOS section or roadmap phase — check it, don't take it on faith.</p>
+    </div>
+    <div class="tools-grid" id="toolsGrid"></div>
+  </div>
+</section>
+
+<section id="patterns">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Synthesis</div>
+      <h2 class="section-title">Cross-Cutting Patterns</h2>
+      <p class="section-desc">Three things that recur independently across all six projects — a stronger signal than any single one alone.</p>
+    </div>
+    <div class="patterns" id="patternsGrid"></div>
+  </div>
+</section>
+
+<section id="recommendations">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Recommendations</div>
+      <h2 class="section-title">Where each pickup points</h2>
+    </div>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>AI-EOS Reference</th><th>Tool Studied</th><th>Specific Pickup</th></tr>
+          </thead>
+          <tbody id="recTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="not-do">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Boundaries</div>
+      <h2 class="section-title">What This Document Does Not Do</h2>
+    </div>
+    <div class="list-card">
+      <ul id="notDoList"></ul>
+    </div>
+  </div>
+</section>
+
+<section id="open-questions">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Next</div>
+      <h2 class="section-title">Open Questions for Strategic AI / Founder Review</h2>
+    </div>
+    <div class="list-card">
+      <ol id="questionsList"></ol>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-title">AI-EOS Runtime — Prior-Art Scan v1.0</div>
+    <p>
+      Companion to <code class="inline">docs/vision/AI-EOS_Runtime_Vision_v1.0.md</code> and
+      <code class="inline">docs/roadmap/AI-EOS_Runtime_Roadmap_v1.0.html</code>.
+      Informational only — no tool named here is endorsed, adopted, or committed to.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var METHOD = [
+    { name: "obra/superpowers", url: "https://github.com/obra/superpowers", stars: "258,663", desc: "An agentic skills framework & software development methodology for coding agents" },
+    { name: "affaan-m/ECC", url: "https://github.com/affaan-m/ECC", stars: "231,817", desc: "Cross-harness agent operator system — skills, instincts, memory, security scanning" },
+    { name: "ruvnet/ruflo", url: "https://github.com/ruvnet/ruflo", stars: "65,397", desc: "Agent meta-harness — router, swarms, adaptive memory, 35 categorized plugins" },
+    { name: "nexu-io/open-design", url: "https://github.com/nexu-io/open-design", stars: "80,332", desc: "Open-source “Claude Design” alternative — coding agent as design engine" },
+    { name: "pablo-mano/Obsidian-CLI-skill", url: "https://github.com/pablo-mano/Obsidian-CLI-skill", stars: "395", desc: "Claude Code skill giving an agent full CLI control of an Obsidian vault" },
+    { name: "multica-ai/andrej-karpathy-skills", url: "https://github.com/multica-ai/andrej-karpathy-skills", stars: "195,001", desc: "A single CLAUDE.md of four behavioral principles distilled from an Andrej Karpathy post" }
+  ];
+
+  var TOOLS = [
+    {
+      name: "obra/superpowers", url: "https://github.com/obra/superpowers", stars: "258,663",
+      desc: "A complete development methodology packaged as composable, auto-triggering skills, distributed as a plugin across nine coding-agent harnesses.",
+      mapping: "Clarify → spec → plan → subagent execution maps to the Workflow Engine / Role Engine pair (Vision §4). Auto-triggering skills are working prior art for Capability activation (§5.1) without the Founder naming a Role."
+    },
+    {
+      name: "affaan-m/ECC", url: "https://github.com/affaan-m/ECC", stars: "231,817",
+      desc: "A cross-harness operator system — skills, instincts, memory, security scanning — plus AgentShield, an AI agent security scanner for configs, MCP servers, and tool permissions.",
+      mapping: "AgentShield is a working instance of the “Security Review” Capability in §5.2's illustrative registry.",
+      caution: "ECC's own README warns: “Official sources only… unofficial mirrors… may contain malware.” Directly relevant to Roadmap Phase 8 (Marketplace) — design supply-chain integrity in from day one."
+    },
+    {
+      name: "ruvnet/ruflo (formerly Claude Flow)", url: "https://github.com/ruvnet/ruflo", stars: "65,397",
+      desc: "An agent meta-harness: Router → Swarm → Agents → Memory → LLM Providers, with a Learning Loop back to the Router, shipped as 35 categorized plugins.",
+      mapping: "The closest working implementation of the §5.1 Decision Hierarchy. Plugins ruflo-adr and ruflo-sparc are shipping code for AI-EOS's own ADR (P-06) and phase-gated lifecycle ideas. Open question: its multi-agent “Swarm” exceeds AI-EOS's single-Role-per-stage design — flagged, not adopted."
+    },
+    {
+      name: "nexu-io/open-design", url: "https://github.com/nexu-io/open-design", stars: "80,332",
+      desc: "A local-first desktop app where the coding agent already on your machine becomes the design engine — prototypes, decks, dashboards, video — shaped by a project's DESIGN.md.",
+      mapping: "Fills the “UI Design” / “UI Generation” rows of §5.3's Example Capability Mapping. DESIGN.md as a persistent brand contract resembles a Product OS artifact handed from UX Discovery to Engineering OS. Its BYOK proxy is a working Provider SDK reference."
+    },
+    {
+      name: "pablo-mano/Obsidian-CLI-skill", url: "https://github.com/pablo-mano/Obsidian-CLI-skill", stars: "395",
+      desc: "A Claude Code skill giving an agent full CLI control of an Obsidian vault — 130+ commands across notes, tags, backlinks, tasks, and sync.",
+      mapping: "A working, portable, human-readable knowledge graph — a concrete candidate for the Memory component (Vision §4) and Roadmap Phase 3's “Knowledge Graph” / “ADR Retrieval” before building a bespoke graph store."
+    },
+    {
+      name: "multica-ai/andrej-karpathy-skills", url: "https://github.com/multica-ai/andrej-karpathy-skills", stars: "195,001",
+      desc: "A single CLAUDE.md distilling four behavioral principles: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution.",
+      mapping: "A candidate default behavioral layer for the Prompt Compiler (Vision §4) — compiled into every Role's invocation regardless of Capability or Provider. Sibling repo multica-ai/multica (managed agents platform) is a rough analog to Roadmap Phase 7, AI-EOS Cloud."
+    }
+  ];
+
+  var PATTERNS = [
+    { title: "Plugin distribution is the dominant vendor-neutrality mechanism", desc: "4 of 6 projects ship as an installable plugin across many harnesses rather than a fork — external validation for the Provider SDK's premise that adding a Provider should be configuration, not architecture." },
+    { title: "Implicit activation is the dominant UX", desc: "Superpowers' auto-triggering skills and the Obsidian skill's natural-language activation both avoid making the user name a Role or tool — favors Capability-based routing over manual selection." },
+    { title: "ADR and staged-methodology tooling already exists", desc: "ruflo-adr and ruflo-sparc are shipping code for ideas AI-EOS has only specified (P-06, the phase-gated lifecycle) — worth a close read once Engineering OS tooling is actually chartered." }
+  ];
+
+  var RECOMMENDATIONS = [
+    ["Vision §5.1 Decision Hierarchy", "ruvnet/ruflo", "Router→Swarm→Agents→Memory→Providers + Learning Loop as a validation reference, not a template to copy"],
+    ["Vision §5.2 Capability Registry (“Security Review”)", "affaan-m/ECC (AgentShield)", "Confirms this Capability category already has real tooling — useful for the future registry schema"],
+    ["Vision §5.3 Example Capability Mapping (“UI Design”)", "nexu-io/open-design", "A real open-source option alongside the illustrative row, plus a BYOK proxy reference"],
+    ["Vision §4 Memory / Roadmap Phase 3", "pablo-mano/Obsidian-CLI-skill", "Vault-based backing store candidate instead of a bespoke graph database"],
+    ["Vision §4 Prompt Compiler", "multica-ai/andrej-karpathy-skills", "Four-principle behavioral layer as a candidate default per-Role injection"],
+    ["Vision §4 Workflow Engine / §5.1 activation", "obra/superpowers", "Clarify→spec→plan→subagent execution as prior art for no-manual-role-naming activation"],
+    ["Roadmap Phase 8 (Marketplace)", "affaan-m/ECC (README warning)", "Design supply-chain integrity into the Marketplace phase from the outset"],
+    ["Roadmap Phase 7 (AI-EOS Cloud)", "multica-ai/multica", "Rough shape reference for a hosted/managed runtime with team dashboards"]
+  ];
+
+  var NOT_DO = [
+    "Does not recommend adopting, installing, licensing, or integrating any named tool — every mapping is descriptive, not prescriptive.",
+    "Does not perform a security, license, or supply-chain review of any repo. The ECC warning is quoted because the repo states it, not from an independent audit.",
+    "Does not alter, supersede, or contradict the Runtime Vision or Roadmap. Neither file was changed.",
+    "Does not open, or imply the need to open, any Engineering Charter.",
+    "Is not an endorsement of, or affiliation claim with, any named project, author, or company."
+  ];
+
+  var QUESTIONS = [
+    "Should the Role Engine ever support a multi-agent “swarm” per stage (per ruflo), or does AI-EOS deliberately stay single-Role-per-stage, per the existing Stage Router design?",
+    "Should the Runtime's Memory component be specified against a vault-like, markdown/backlink model (per the Obsidian skill), or a database/graph model — and does that belong in the Capability Registry data model?",
+    "If Roadmap Phase 8 (Marketplace) is ever chartered, should its acceptance criteria include supply-chain integrity measures from the start, given the warning already present in ECC's own documentation?"
+  ];
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  var methodBody = document.getElementById("methodTable");
+  METHOD.forEach(function (m) {
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><a href="' + m.url + '" target="_blank" rel="noopener">' + m.name + '</a></td>' +
+      '<td class="stars">' + m.stars + '</td>' +
+      '<td>' + m.desc + '</td>';
+    methodBody.appendChild(tr);
+  });
+
+  var toolsGrid = document.getElementById("toolsGrid");
+  TOOLS.forEach(function (t) {
+    var card = el("div", "tool-card");
+    var head = el("div", "tool-head",
+      '<div class="tool-name"><a href="' + (t.url || "#") + '" target="_blank" rel="noopener">' + t.name + '</a></div>' +
+      '<div class="tool-stars">★ ' + t.stars + '</div>'
+    );
+    card.appendChild(head);
+    card.appendChild(el("div", "tool-desc", t.desc));
+    var mapBlock = el("div");
+    mapBlock.appendChild(el("div", "tool-block-label", "Mapping to AI-EOS"));
+    mapBlock.appendChild(el("div", "tool-mapping", t.mapping));
+    card.appendChild(mapBlock);
+    if (t.caution) {
+      var cautionBlock = el("div");
+      cautionBlock.appendChild(el("div", "tool-block-label", "Caution"));
+      cautionBlock.appendChild(el("div", "tool-caution", "<strong>⚠</strong> " + t.caution));
+      card.appendChild(cautionBlock);
+    }
+    toolsGrid.appendChild(card);
+  });
+
+  var patternsGrid = document.getElementById("patternsGrid");
+  PATTERNS.forEach(function (p, i) {
+    var card = el("div", "pattern-card");
+    card.appendChild(el("div", "pattern-num", String(i + 1)));
+    card.appendChild(el("div", "pattern-title", p.title));
+    card.appendChild(el("div", "pattern-desc", p.desc));
+    patternsGrid.appendChild(card);
+  });
+
+  var recBody = document.getElementById("recTable");
+  RECOMMENDATIONS.forEach(function (r) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td>';
+    recBody.appendChild(tr);
+  });
+
+  var notDoList = document.getElementById("notDoList");
+  NOT_DO.forEach(function (n) { notDoList.appendChild(el("li", null, n)); });
+
+  var questionsList = document.getElementById("questionsList");
+  QUESTIONS.forEach(function (q) { questionsList.appendChild(el("li", null, q)); });
+
+  // Theme toggle
+  var root = document.documentElement;
+  var toggle = document.getElementById("themeToggle");
+  var stored = null;
+  try { stored = localStorage.getItem("aieos-theme"); } catch (e) {}
+  if (stored) root.setAttribute("data-theme", stored);
+
+  function currentTheme() {
+    var attr = root.getAttribute("data-theme");
+    if (attr) return attr;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  toggle.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("aieos-theme", next); } catch (e) {}
+  });
+})();
+</script>
+
+</body>
+</html>
