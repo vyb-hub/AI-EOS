@@ -6,7 +6,8 @@ import test from "node:test";
 import type {
   InvocationRequest,
   Provider,
-  ProviderResult
+  ProviderResult,
+  StageId
 } from "../src/domain.js";
 import { buildCodexArgs, CodexCliProvider } from "../src/providers/codex-cli.js";
 import { validateEvidence } from "../src/evidence.js";
@@ -315,9 +316,10 @@ test("Product Discovery waits for Founder input and completes four gates", async
 test("Fast discovery persists an immediate brief and uses two Founder gates", async () => {
   const { root, charter: idea, store } = await fixture();
   const progress: string[] = [];
+  const provider = new RecordingProvider();
   const runtime = new Runtime(
     store,
-    new FakeProvider(),
+    provider,
     (message) => progress.push(message)
   );
   let state = await runtime.startDiscovery(idea);
@@ -347,6 +349,36 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
   assert.equal(state.pendingApproval?.stageId, "product-readiness-review");
   state = await runtime.approve(state.runId);
   assert.equal(state.status, "completed");
+  assert.deepEqual(state.completedStages, [
+    "founder-discovery-questions",
+    "founder-intent",
+    "market-research",
+    "opportunity-risk",
+    "product-readiness-review"
+  ]);
+  assert.deepEqual(provider.stageIds, state.completedStages);
+  assert.equal(provider.stageIds.length, 5);
+
+  const events = await readFile(
+    join(store.runDir(state.runId), "events.jsonl"),
+    "utf8"
+  );
+  for (const skipped of [
+    "product-strategy",
+    "product-requirements",
+    "user-journey",
+    "engineering-charter-handoff",
+    "product-knowledge-capture"
+  ]) {
+    assert.match(
+      events,
+      new RegExp(`"type":"stage.skipped".*"stageId":"${skipped}"`)
+    );
+  }
+  await assert.rejects(
+    readFile(join(store.runDir(state.runId), "handoff", "engineering-charter.md")),
+    /ENOENT/
+  );
 });
 
 test("persists stage performance metrics for successful provider attempts", async () => {
@@ -602,5 +634,16 @@ class AlwaysFailProvider implements Provider {
 
   async invoke(_request: InvocationRequest): Promise<ProviderResult> {
     throw new Error("Simulated persistent provider failure.");
+  }
+}
+
+class RecordingProvider implements Provider {
+  readonly name = "recording";
+  readonly stageIds: StageId[] = [];
+  private readonly delegate = new FakeProvider();
+
+  async invoke(request: InvocationRequest): Promise<ProviderResult> {
+    this.stageIds.push(request.stage.id);
+    return this.delegate.invoke(request);
   }
 }

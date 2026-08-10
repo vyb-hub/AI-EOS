@@ -284,6 +284,7 @@ export class Runtime {
 
   private async runUntilHalt(state: RunState): Promise<RunState> {
     while (state.status === "running") {
+      await this.skipExcludedStages(state);
       const stage = this.currentStage(state);
       if (!stage) {
         state.status = "completed";
@@ -526,7 +527,7 @@ export class Runtime {
     stage: StageDefinition
   ): Promise<ContextDocument[]> {
     const documents: ContextDocument[] = [];
-    for (const source of stage.contextSources) {
+    for (const source of this.contextSourcesFor(state, stage)) {
       if (source === "charter") {
         const content = await readFile(state.charterPath, "utf8");
         if (sha256(content) !== state.charterHash) {
@@ -598,6 +599,49 @@ export class Runtime {
 
   private currentStage(state: RunState): StageDefinition | undefined {
     return flowById(state.flowId).stages[state.stageIndex];
+  }
+
+  private async skipExcludedStages(state: RunState): Promise<void> {
+    while (true) {
+      const stage = this.currentStage(state);
+      if (!stage || !this.isStageExcluded(state, stage.id)) {
+        return;
+      }
+      await this.event(state, "stage.skipped", stage.id, {
+        mode: state.discoveryMode,
+        reason: "Excluded by the selected Product Discovery mode."
+      });
+      state.stageIndex += 1;
+      state.updatedAt = new Date().toISOString();
+      await this.store.saveState(state);
+    }
+  }
+
+  private isStageExcluded(state: RunState, stageId: StageId): boolean {
+    if (state.flowId !== "product-discovery" || state.discoveryMode !== "fast") {
+      return false;
+    }
+    return new Set<StageId>([
+      "product-strategy",
+      "product-requirements",
+      "user-journey",
+      "engineering-charter-handoff",
+      "product-knowledge-capture"
+    ]).has(stageId);
+  }
+
+  private contextSourcesFor(
+    state: RunState,
+    stage: StageDefinition
+  ): string[] {
+    if (
+      state.flowId === "product-discovery" &&
+      state.discoveryMode === "fast" &&
+      stage.id === "product-readiness-review"
+    ) {
+      return ["founder-intent", "market-research", "opportunity-risk"];
+    }
+    return stage.contextSources;
   }
 
   private async event(

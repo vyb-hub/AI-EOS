@@ -27,6 +27,34 @@ after Product Readiness Approval.
 | 10 | Engineering Charter Handoff | Knowledge AI | Read-only | — |
 | 11 | Knowledge Capture | Knowledge AI | Read-only | — |
 
+## Mode Profiles
+
+Deep mode executes the complete flow above. Standard mode currently retains the
+complete artifact set with fewer Founder interruptions.
+
+Fast mode is a distinct decision-brief flow, not the complete flow with gates
+hidden:
+
+```text
+Founder Discovery Questions
+→ Founder Intent Synthesis
+→ Founder Intent Approval
+→ bounded Market Research
+→ combined Opportunity, Risk, and MVP Recommendation
+→ independent Product Readiness Review
+→ Product Readiness Approval
+→ Complete
+```
+
+Fast mode skips Product Strategy as a separate invocation, detailed Product
+Requirements, the full User Journey, Engineering Charter Handoff, and Product
+Knowledge Capture. Its output is a decision brief and does not claim
+engineering readiness or create a proposed Charter. A Founder may explicitly
+continue with Standard or Deep discovery when detailed definition is warranted.
+
+Skipped stages are persisted as `stage.skipped` events with the selected mode
+and are never represented as completed work.
+
 ## Founder Discovery Questions
 
 Questions must be bounded and individually identified. The first round covers:
@@ -79,6 +107,10 @@ The Runtime allows a maximum of three clarification rounds in the MVP.
 - Unresolved risks and assumptions are visible.
 - The proposed product is bounded enough for one Engineering Charter.
 
+In Fast mode, Product Readiness means decision-brief readiness: the opportunity,
+recommendation, evidence limits, contradictions, and next Founder decision are
+clear. Engineering-readiness criteria apply only to Standard and Deep outputs.
+
 ## Common Rules
 
 - Only `completed` advances.
@@ -87,4 +119,3 @@ The Runtime allows a maximum of three clarification rounds in the MVP.
 - Every gate references current artifact hashes.
 - Changed upstream evidence invalidates derived approvals.
 - No stage performs implementation, source control, publication, or outreach.
-

@@ -297,7 +297,7 @@ function discoveryBudgetInstruction(
 ): string {
   const budgets = {
     fast:
-      "Discovery mode is FAST. Prefer a useful directional answer. Market Research may use at most 3 competitors and 5 sources; stop when additional evidence will not change the decision.",
+      "Discovery mode is FAST. Prefer a useful directional answer. Market Research may use at most 3 competitors and 5 sources; stop when additional evidence will not change the decision. In Opportunity and Risk, also produce the bounded MVP recommendation because Fast mode does not run a separate Product Strategy stage. In Product Readiness Review, assess decision-brief readiness rather than engineering readiness.",
     standard:
       "Discovery mode is STANDARD. Market Research may use at most 5 competitors and 10 sources; balance decision quality and latency.",
     deep:
