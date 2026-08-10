@@ -193,6 +193,19 @@ stage changes appear without Founder action. The optional CLI preview flag opens
 this local file as soon as it is created; rendering remains deterministic and
 requires no HTTP service or additional dependency.
 
+The Founder view uses a decision-dashboard hierarchy rather than presenting the
+audit trail first. Its visual metrics are derived only from persisted Runtime
+state: stage progress, verified competitor count, recorded decision count, and
+the latest stage's open-action count. `needs_changes` is labeled as a Founder
+decision checkpoint in the view even though the current Runtime state remains
+the governed terminal `failed` state until a revision branch is implemented.
+
+The dashboard uses the Nature palette by default with a dark forest-green
+recommendation surface. Founder-selectable Earth, Indigo, and Midnight palettes
+change presentation only and persist locally across automatic refreshes. Theme
+selection never changes evidence, approvals, Runtime state, or generated metric
+values.
+
 ## Codex CLI Hardening
 
 Before EC-004 implementation:

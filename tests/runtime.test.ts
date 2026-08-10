@@ -46,9 +46,44 @@ test("active Founder brief self-refreshes and explains current work", () => {
   });
 
   assert.match(html, /Working now/);
+  assert.match(html, /Executive finding/);
+  assert.match(html, /class="executive-copy"/);
+  assert.match(html, /class="action-copy"/);
+  assert.match(html, /\.audit summary\{font-weight:400/);
+  assert.match(html, /data-theme="nature"/);
+  assert.match(html, />Earth<\/button>/);
+  assert.match(html, />Indigo<\/button>/);
+  assert.match(html, />Midnight<\/button>/);
+  assert.match(html, /ai-eos-product-brief-theme/);
+  assert.match(html, /--inverse:#16271e/);
+  assert.match(html, /<strong>20%<\/strong>/);
+  assert.match(html, /Decisions and evidence/);
   assert.match(html, /Active for <span id="elapsed">/);
   assert.match(html, /setTimeout\(\(\)=>location\.reload\(\),3000\)/);
   assert.match(html, /Live preview enabled/);
+});
+
+test("Founder brief presents needs_changes as a decision checkpoint", () => {
+  const html = renderProductBrief({
+    schemaVersion: 1,
+    runId: "run_needs_changes",
+    title: "Koottam",
+    mode: "fast",
+    status: "failed",
+    ideaSummary: "A culture and movement space.",
+    completedStages: ["founder-intent", "market-research", "opportunity-risk"],
+    totalStages: 5,
+    nextAction: "Stage product-readiness-review halted with outcome needs_changes: pilot economics are missing.",
+    competitors: [],
+    sections: [],
+    updatedAt: "2026-08-10T15:00:00.000Z"
+  });
+
+  assert.match(html, /needs Founder decisions/);
+  assert.match(html, /Founder decisions required/);
+  assert.match(html, /needs-decisions/);
+  assert.match(html, /class="card action needs-decisions"/);
+  assert.doesNotMatch(html, /Working now/);
 });
 
 test("starts deterministically and halts at architecture approval", async () => {

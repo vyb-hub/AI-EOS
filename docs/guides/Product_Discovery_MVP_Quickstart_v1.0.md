@@ -38,6 +38,13 @@ page refreshes itself while work is active, displays the current stage and an
 elapsed timer, and becomes static whenever the Runtime pauses for Founder input
 or approval. Omit the flag in headless or automated environments.
 
+Re-render and reopen any persisted run with the current dashboard renderer
+without repeating provider work:
+
+```text
+node dist/src/cli.js --project <project-path> discovery preview <run-id>
+```
+
 The run stops at `awaiting_input`. Print the generated question-set path:
 
 ```text

@@ -99,6 +99,19 @@ discovery
   });
 
 discovery
+  .command("preview")
+  .argument("<run-id>")
+  .description("re-render and open a persisted Founder brief")
+  .action(async (runId: string) => {
+    const store = new FileStore(projectRoot());
+    await store.loadState(runId);
+    const model = await store.loadProductBrief(runId);
+    const path = await store.saveProductBrief(model);
+    openPreview(path);
+    console.log(path);
+  });
+
+discovery
   .command("respond")
   .argument("<run-id>")
   .requiredOption("--file <answers-path>")
