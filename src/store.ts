@@ -163,7 +163,8 @@ export class FileStore {
   async saveEvidence(
     runId: string,
     sources: unknown[],
-    claims: unknown[]
+    claims: unknown[],
+    competitors: unknown[] = []
   ): Promise<void> {
     await this.atomicWrite(
       join(this.runDir(runId), "evidence", "sources.json"),
@@ -173,12 +174,21 @@ export class FileStore {
       join(this.runDir(runId), "evidence", "claims.json"),
       `${JSON.stringify(claims, null, 2)}\n`
     );
+    await this.atomicWrite(
+      join(this.runDir(runId), "evidence", "competitors.json"),
+      `${JSON.stringify(competitors, null, 2)}\n`
+    );
   }
 
-  evidencePaths(runId: string): { sources: string; claims: string } {
+  evidencePaths(runId: string): {
+    sources: string;
+    claims: string;
+    competitors: string;
+  } {
     return {
       sources: join(this.runDir(runId), "evidence", "sources.json"),
-      claims: join(this.runDir(runId), "evidence", "claims.json")
+      claims: join(this.runDir(runId), "evidence", "claims.json"),
+      competitors: join(this.runDir(runId), "evidence", "competitors.json")
     };
   }
 
@@ -193,6 +203,7 @@ export class FileStore {
     await mkdir(revisionDir, { recursive: true });
     await copyFile(current.sources, join(revisionDir, "sources.json"));
     await copyFile(current.claims, join(revisionDir, "claims.json"));
+    await copyFile(current.competitors, join(revisionDir, "competitors.json"));
     await copyFile(
       join(this.runDir(runId), "stages", "market-research", "artifact.md"),
       join(revisionDir, "market-research.md")

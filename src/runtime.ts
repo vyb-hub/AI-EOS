@@ -428,11 +428,31 @@ export class Runtime {
       if (evidence.sources.length === 0 || evidence.claims.length === 0) {
         throw new Error("Market Research must produce sources and claims.");
       }
+      const competitors = validation.data.competitors ?? [];
+      const sourceIds = new Set(evidence.sources.map((source) => source.sourceId));
+      for (const competitor of competitors) {
+        for (const sourceId of competitor.sourceIds) {
+          if (!sourceIds.has(sourceId)) {
+            throw new Error(
+              `Competitor ${competitor.name} references missing source ${sourceId}.`
+            );
+          }
+        }
+      }
       await this.store.saveEvidence(
         state.runId,
         evidence.sources,
-        evidence.claims
+        evidence.claims,
+        competitors
       );
+      this.progress(
+        `Competitor analysis ready · ${competitors.length} profile(s) verified · ${evidence.sources.length} source(s)`
+      );
+      for (const competitor of competitors.slice(0, 3)) {
+        this.progress(
+          `${competitor.competitorType}: ${competitor.name} · pricing ${competitor.pricingStatus}`
+        );
+      }
     }
 
     const artifactPath = await this.store.saveCurrentStageArtifact(
@@ -500,6 +520,9 @@ export class Runtime {
         );
         artifactHashes[evidencePaths.claims] = sha256(
           await readFile(evidencePaths.claims)
+        );
+        artifactHashes[evidencePaths.competitors] = sha256(
+          await readFile(evidencePaths.competitors)
         );
       }
       state.status = "awaiting_approval";

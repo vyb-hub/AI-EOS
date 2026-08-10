@@ -121,6 +121,26 @@ const outputSchema = {
         ],
         additionalProperties: false
       }
+    },
+    competitors: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          competitorType: { type: "string", enum: ["direct", "category", "substitute", "behavioral"] },
+          location: { type: ["string", "null"] },
+          targetCustomer: { type: ["string", "null"] },
+          coreOffer: { type: "string" },
+          pricingStatus: { type: "string" },
+          strengths: { type: "array", items: { type: "string" } },
+          weaknesses: { type: "array", items: { type: "string" } },
+          unknowns: { type: "array", items: { type: "string" } },
+          sourceIds: { type: "array", items: { type: "string" } }
+        },
+        required: ["name", "competitorType", "location", "targetCustomer", "coreOffer", "pricingStatus", "strengths", "weaknesses", "unknowns", "sourceIds"],
+        additionalProperties: false
+      }
     }
   },
   required: [
@@ -131,7 +151,8 @@ const outputSchema = {
     "nextActions",
     "questions",
     "sources",
-    "claims"
+    "claims",
+    "competitors"
   ],
   additionalProperties: false
 } as const;
@@ -278,10 +299,10 @@ function renderPrompt(request: InvocationRequest): string {
       ? "Return a bounded questions array with stable IDs; do not infer the Founder's answers."
       : "",
     request.stage.id === "market-research"
-      ? "Return non-empty sources and claims arrays that satisfy the Product Discovery evidence contract. Open and verify every cited page. The source title, URL, and claim must describe the same content; never use a search snippet, redirect target, category page, or unrelated product page as evidence for a claim."
+      ? "Return non-empty sources, claims, and competitor profiles that satisfy the Product Discovery evidence contract. Cover direct competitors, category competitors, substitutes, or behavioral alternatives as relevant. Every competitor must reference verified source IDs. Record unverified pricing as unknown. Open and verify every cited page. The source title, URL, and claim must describe the same content; never use a search snippet, redirect target, category page, or unrelated product page as evidence for a claim."
       : request.stage.id === "founder-intent"
         ? "Return sources empty. Claims may record Founder-input provenance and supported inferences."
-        : "Return empty sources and claims arrays. Only Market Research may create or change evidence registry records.",
+        : "Return empty sources, claims, and competitors arrays. Only Market Research may create or change evidence registry records.",
     request.stage.id === "founder-discovery-questions"
       ? "Return source and claim registries empty."
       : "Return the questions array empty; only Founder Discovery Questions may populate it.",

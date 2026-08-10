@@ -25,7 +25,23 @@ export const stageOutputSchema = z.object({
     )
     .optional(),
   sources: z.array(z.lazy(() => evidenceSourceSchema)).optional(),
-  claims: z.array(z.lazy(() => evidenceClaimSchema)).optional()
+  claims: z.array(z.lazy(() => evidenceClaimSchema)).optional(),
+  competitors: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        competitorType: z.enum(["direct", "category", "substitute", "behavioral"]),
+        location: z.string().min(1).nullable().optional().transform((value) => value ?? undefined),
+        targetCustomer: z.string().min(1).nullable().optional().transform((value) => value ?? undefined),
+        coreOffer: z.string().min(1),
+        pricingStatus: z.string().min(1),
+        strengths: z.array(z.string().min(1)),
+        weaknesses: z.array(z.string().min(1)),
+        unknowns: z.array(z.string().min(1)),
+        sourceIds: z.array(z.string().min(1)).min(1)
+      })
+    )
+    .optional()
 });
 
 export const evidenceSourceSchema = z.object({

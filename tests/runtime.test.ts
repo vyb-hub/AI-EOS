@@ -300,6 +300,14 @@ test("Product Discovery waits for Founder input and completes four gates", async
     )
   ) as unknown[];
   assert.equal(sources.length, 1);
+  const competitors = JSON.parse(
+    await readFile(
+      join(store.runDir(state.runId), "evidence", "competitors.json"),
+      "utf8"
+    )
+  ) as Array<{ name: string; sourceIds: string[] }>;
+  assert.equal(competitors[0]?.name, "Controlled fixture competitor");
+  assert.deepEqual(competitors[0]?.sourceIds, ["S-001"]);
   assert.match(
     await readFile(
       join(
@@ -347,6 +355,12 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
   assert.equal(state.pendingApproval?.stageId, "founder-intent");
   state = await runtime.approve(state.runId);
   assert.equal(state.pendingApproval?.stageId, "product-readiness-review");
+  assert.ok(
+    progress.some((message) => message.includes("Competitor analysis ready"))
+  );
+  assert.ok(
+    progress.some((message) => message.includes("Controlled fixture competitor"))
+  );
   state = await runtime.approve(state.runId);
   assert.equal(state.status, "completed");
   assert.deepEqual(state.completedStages, [

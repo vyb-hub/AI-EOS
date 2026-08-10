@@ -123,6 +123,7 @@ export interface ProviderResult {
     questions?: DiscoveryQuestion[] | undefined;
     sources?: EvidenceSource[] | undefined;
     claims?: EvidenceClaim[] | undefined;
+    competitors?: CompetitorProfile[] | undefined;
   };
   raw: unknown;
   startedAt: string;
@@ -183,6 +184,19 @@ export interface EvidenceClaim {
   derivedFromClaimIds: string[];
   confidence: "low" | "medium" | "high";
   status: "active" | "rejected" | "superseded";
+}
+
+export interface CompetitorProfile {
+  name: string;
+  competitorType: "direct" | "category" | "substitute" | "behavioral";
+  location?: string | undefined;
+  targetCustomer?: string | undefined;
+  coreOffer: string;
+  pricingStatus: string;
+  strengths: string[];
+  weaknesses: string[];
+  unknowns: string[];
+  sourceIds: string[];
 }
 
 export interface Provider {

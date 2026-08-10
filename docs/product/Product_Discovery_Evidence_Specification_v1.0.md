@@ -88,6 +88,30 @@ The Market Research stage produces:
 - assumptions requiring validation
 - research limitations
 
+## Competitor Profile
+
+Competitor analysis is a structured Market Research output, not unstructured
+prose. Each direct competitor, category competitor, substitute, or behavioral
+alternative records:
+
+```text
+name
+competitorType
+location?
+targetCustomer?
+coreOffer
+pricingStatus
+strengths[]
+weaknesses[]
+unknowns[]
+sourceIds[]
+```
+
+Every profile references at least one persisted evidence source. Unverified
+pricing is recorded as unknown, never inferred. The Runtime persists profiles
+in `evidence/competitors.json` and surfaces a concise competitor update as soon
+as Market Research completes.
+
 ## Citation in Human-Readable Artifacts
 
 Human-readable findings cite stable source IDs:
@@ -128,4 +152,3 @@ Research Evidence Approval binds to:
 
 Changing any bound artifact invalidates Research Evidence Approval and all
 downstream approvals derived from it.
-

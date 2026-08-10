@@ -44,6 +44,18 @@ export class FakeProvider implements Provider {
                   confidence: "medium" as const,
                   status: "active" as const
                 }
+              ],
+              competitors: [
+                {
+                  name: "Controlled fixture competitor",
+                  competitorType: "direct" as const,
+                  coreOffer: "A deterministic competing offer.",
+                  pricingStatus: "Not verified",
+                  strengths: ["Existing alternative"],
+                  weaknesses: ["Limited fixture evidence"],
+                  unknowns: ["Current pricing"],
+                  sourceIds: ["S-001"]
+                }
               ]
             }
           : {};
