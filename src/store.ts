@@ -17,6 +17,7 @@ import type {
   StageId
 } from "./domain.js";
 import { projectConfigSchema, runStateSchema, type ProjectConfig } from "./schemas.js";
+import { renderProductBrief, type ProductBriefModel } from "./product-brief.js";
 
 export class FileStore {
   readonly projectRoot: string;
@@ -97,6 +98,20 @@ export class FileStore {
     const path = join(this.runDir(runId), "idea-brief.md");
     await this.atomicWrite(path, content);
     return path;
+  }
+
+  async saveProductBrief(model: ProductBriefModel): Promise<string> {
+    const jsonPath = join(this.runDir(model.runId), "product-brief.json");
+    const htmlPath = join(this.runDir(model.runId), "product-brief.html");
+    await this.atomicWrite(jsonPath, `${JSON.stringify(model, null, 2)}\n`);
+    await this.atomicWrite(htmlPath, renderProductBrief(model));
+    return htmlPath;
+  }
+
+  async loadProductBrief(runId: string): Promise<ProductBriefModel> {
+    return JSON.parse(
+      await readFile(join(this.runDir(runId), "product-brief.json"), "utf8")
+    ) as ProductBriefModel;
   }
 
   async saveStageAttempt(

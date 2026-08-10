@@ -336,6 +336,10 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
     await readFile(join(store.runDir(state.runId), "idea-brief.md"), "utf8"),
     /Immediate Idea Brief/
   );
+  assert.match(
+    await readFile(join(store.runDir(state.runId), "product-brief.html"), "utf8"),
+    /Living Product Brief/
+  );
   assert.ok(progress.some((message) => message.includes("Idea Brief ready")));
   const responsePath = join(root, "fast-response.json");
   await writeFile(
@@ -372,6 +376,15 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
   ]);
   assert.deepEqual(provider.stageIds, state.completedStages);
   assert.equal(provider.stageIds.length, 5);
+  const livingBrief = await readFile(
+    join(store.runDir(state.runId), "product-brief.html"),
+    "utf8"
+  );
+  assert.match(livingBrief, /Controlled fixture competitor/);
+  assert.match(livingBrief, /Competitor landscape/);
+  assert.match(livingBrief, /product-readiness-review/);
+  assert.match(livingBrief, /completed/);
+  assert.match(livingBrief, /Discovery complete/);
 
   const events = await readFile(
     join(store.runDir(state.runId), "events.jsonl"),

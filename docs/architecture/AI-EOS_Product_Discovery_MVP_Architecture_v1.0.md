@@ -177,6 +177,19 @@ negative-outcome, and provider-failure events. Metrics contain sizes and timing,
 not additional prompt content or credentials. DR-004 service targets are
 evaluated from persisted events and attempt manifests.
 
+## Living Product Brief
+
+Product Discovery creates `product-brief.html` and its structured
+`product-brief.json` model at run start. The Runtime updates both atomically
+after every completed stage and whenever it pauses for Founder input or
+approval. Rendering is deterministic and never invokes an AI provider.
+
+The primary view prioritizes current status, progress, the next Founder action,
+latest findings, decisions, and structured competitor profiles. Detailed stage
+history remains available as an expandable audit view. The file path remains
+stable throughout the run so a Founder can keep one document open and refresh
+it while discovery progresses.
+
 ## Codex CLI Hardening
 
 Before EC-004 implementation:

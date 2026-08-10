@@ -15,6 +15,7 @@ import { featureDevelopmentFlow, flowById, productDiscoveryFlow } from "./flow.j
 import { newId, sha256 } from "./hash.js";
 import { founderResponseSchema, stageOutputSchema } from "./schemas.js";
 import { FileStore } from "./store.js";
+import type { ProductBriefSection } from "./product-brief.js";
 
 export class Runtime {
   constructor(
@@ -67,6 +68,21 @@ export class Runtime {
       this.progress(
         `Idea Brief ready · ${discoveryMode ?? "fast"} mode · starting clarification`
       );
+      const briefPath = await this.store.saveProductBrief({
+        schemaVersion: 1,
+        runId: state.runId,
+        title: basename(absoluteCharterPath, ".md"),
+        mode: discoveryMode ?? "fast",
+        status: state.status,
+        ideaSummary: this.ideaSummary(charter),
+        completedStages: [],
+        totalStages: (discoveryMode ?? "fast") === "fast" ? 5 : 10,
+        nextAction: "Review the idea while AI-EOS prepares focused Founder questions.",
+        competitors: [],
+        sections: [],
+        updatedAt: now
+      });
+      this.progress(`Living Product Brief ready · ${briefPath}`);
     }
     await this.store.saveState(state);
     await this.event(state, "run.started", undefined, {
@@ -292,6 +308,7 @@ export class Runtime {
         await this.store.saveState(state);
         await this.event(state, "run.completed", undefined, {});
         await this.store.saveReport(state.runId, this.renderReport(state));
+        await this.updateProductBriefStatus(state, "Discovery complete. Review the final brief and evidence.");
         break;
       }
 
@@ -302,6 +319,7 @@ export class Runtime {
         state.lastError = error instanceof Error ? error.message : String(error);
         state.updatedAt = new Date().toISOString();
         await this.store.saveState(state);
+        await this.updateProductBriefStatus(state, state.lastError);
         await this.event(state, "run.failed", stage.id, {
           error: state.lastError
         });
@@ -472,6 +490,16 @@ export class Runtime {
     if (!state.completedStages.includes(stage.id)) {
       state.completedStages.push(stage.id);
     }
+    if (state.flowId === "product-discovery") {
+      await this.updateProductBrief(state, {
+        stageId: stage.id,
+        summary: validation.data.summary,
+        findings: validation.data.findings,
+        decisions: validation.data.decisions,
+        nextActions: validation.data.nextActions,
+        completedAt: result.completedAt
+      }, validation.data.competitors ?? []);
+    }
     await this.event(state, "stage.completed", stage.id, {
       attempt,
       artifactHash: sha256(artifact),
@@ -502,6 +530,10 @@ export class Runtime {
       };
       state.updatedAt = new Date().toISOString();
       await this.store.saveState(state);
+      await this.updateProductBriefStatus(
+        state,
+        "Answer the focused Founder questions to continue discovery."
+      );
       await this.event(state, "founder.input_awaiting", stage.id, {
         questionSetId,
         questionPath
@@ -533,6 +565,10 @@ export class Runtime {
       };
       state.updatedAt = new Date().toISOString();
       await this.store.saveState(state);
+      await this.updateProductBriefStatus(
+        state,
+        `Review and decide: ${state.pendingApproval.gateName}.`
+      );
       await this.event(state, "gate.awaiting", stage.id, {
         gateName: state.pendingApproval.gateName,
         artifactHashes: state.pendingApproval.artifactHashes
@@ -764,6 +800,47 @@ export class Runtime {
       "This brief is immediate orientation, not a market conclusion.",
       ""
     ].join("\n");
+  }
+
+  private ideaSummary(idea: string): string {
+    return idea.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#")).slice(0, 4).join(" ");
+  }
+
+  private async updateProductBrief(
+    state: RunState,
+    section: ProductBriefSection,
+    competitors: NonNullable<Awaited<ReturnType<Provider["invoke"]>>["output"]["competitors"]>
+  ): Promise<void> {
+    const model = await this.store.loadProductBrief(state.runId);
+    const sections = model.sections.filter((item) => item.stageId !== section.stageId);
+    sections.push(section);
+    const path = await this.store.saveProductBrief({
+      ...model,
+      status: state.status,
+      completedStages: [...state.completedStages],
+      nextAction: section.nextActions[0] ?? "Review the latest persisted findings.",
+      competitors: competitors.length ? competitors : model.competitors,
+      sections,
+      updatedAt: new Date().toISOString()
+    });
+    this.progress(`Product Brief updated · ${section.stageId} · ${path}`);
+  }
+
+  private async updateProductBriefStatus(
+    state: RunState,
+    nextAction: string
+  ): Promise<void> {
+    if (state.flowId !== "product-discovery") {
+      return;
+    }
+    const model = await this.store.loadProductBrief(state.runId);
+    await this.store.saveProductBrief({
+      ...model,
+      status: state.status,
+      completedStages: [...state.completedStages],
+      nextAction,
+      updatedAt: new Date().toISOString()
+    });
   }
 
   private shouldOpenGate(
