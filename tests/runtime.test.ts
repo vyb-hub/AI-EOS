@@ -349,6 +349,72 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
   assert.equal(state.status, "completed");
 });
 
+test("persists stage performance metrics for successful provider attempts", async () => {
+  const { charter, store } = await fixture();
+  const runtime = new Runtime(store, new FakeProvider());
+
+  const state = await runtime.start(charter);
+  const invocation = JSON.parse(
+    await readFile(
+      join(
+        store.runDir(state.runId),
+        "stages",
+        "research",
+        "attempt-1",
+        "invocation.json"
+      ),
+      "utf8"
+    )
+  ) as Record<string, unknown>;
+
+  assert.equal(typeof invocation.startedAt, "string");
+  assert.equal(typeof invocation.completedAt, "string");
+  assert.equal(typeof invocation.durationMs, "number");
+  assert.equal(typeof invocation.providerDurationMs, "number");
+  assert.equal(invocation.contextDocumentCount, 1);
+  assert.equal(typeof invocation.contextBytes, "number");
+  assert.equal(typeof invocation.outputBytes, "number");
+
+  const events = (await readFile(
+    join(store.runDir(state.runId), "events.jsonl"),
+    "utf8"
+  ))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { type: string; details: object });
+  const completed = events.find((event) => event.type === "stage.completed");
+  assert.ok(completed);
+  assert.equal(
+    typeof (completed.details as { durationMs?: unknown }).durationMs,
+    "number"
+  );
+});
+
+test("records provider failure duration before halting a run", async () => {
+  const { charter, store } = await fixture();
+  const runtime = new Runtime(store, new AlwaysFailProvider());
+
+  const state = await runtime.start(charter);
+  assert.equal(state.status, "failed");
+
+  const events = (await readFile(
+    join(store.runDir(state.runId), "events.jsonl"),
+    "utf8"
+  ))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { type: string; details: object });
+  const providerFailure = events.find(
+    (event) => event.type === "stage.provider_failed"
+  );
+  assert.ok(providerFailure);
+  assert.equal(
+    typeof (providerFailure.details as { providerDurationMs?: unknown })
+      .providerDurationMs,
+    "number"
+  );
+});
+
 test("Research Evidence Approval is invalidated when evidence changes", async () => {
   const { root, charter: idea, store } = await fixture();
   const runtime = new Runtime(store, new FakeProvider());
@@ -528,5 +594,13 @@ class NeedsChangesProvider implements Provider {
       startedAt: now,
       completedAt: now
     };
+  }
+}
+
+class AlwaysFailProvider implements Provider {
+  readonly name = "always-fail";
+
+  async invoke(_request: InvocationRequest): Promise<ProviderResult> {
+    throw new Error("Simulated persistent provider failure.");
   }
 }

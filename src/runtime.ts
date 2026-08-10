@@ -313,6 +313,7 @@ export class Runtime {
     state: RunState,
     stage: StageDefinition
   ): Promise<void> {
+    const stageStartedAt = Date.now();
     const attempt = (state.attemptByStage[stage.id] ?? 0) + 1;
     this.progress(this.stageProgress(stage, state.discoveryMode));
     state.attemptByStage[stage.id] = attempt;
@@ -322,15 +323,42 @@ export class Runtime {
 
     const context = await this.compileContext(state, stage);
     const invocationId = newId("inv");
-    const result = await this.provider.invoke({
-      invocationId,
-      runId: state.runId,
-      stage,
-      roleInstructions: `Act only as ${stage.role}. Return the required structured output.`,
-      context,
-      ...(state.discoveryMode ? { discoveryMode: state.discoveryMode } : {})
-    });
+    let result: Awaited<ReturnType<Provider["invoke"]>>;
+    const providerStartedAt = Date.now();
+    try {
+      result = await this.provider.invoke({
+        invocationId,
+        runId: state.runId,
+        stage,
+        roleInstructions: `Act only as ${stage.role}. Return the required structured output.`,
+        context,
+        ...(state.discoveryMode ? { discoveryMode: state.discoveryMode } : {})
+      });
+    } catch (error) {
+      await this.event(state, "stage.provider_failed", stage.id, {
+        attempt,
+        invocationId,
+        durationMs: Date.now() - stageStartedAt,
+        providerDurationMs: Date.now() - providerStartedAt,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
     const validation = stageOutputSchema.safeParse(result.output);
+    const outputJson = `${JSON.stringify(result.output, null, 2)}\n`;
+    const metrics = {
+      durationMs: Date.now() - stageStartedAt,
+      providerDurationMs: Math.max(
+        0,
+        Date.parse(result.completedAt) - Date.parse(result.startedAt)
+      ),
+      contextDocumentCount: context.length,
+      contextBytes: context.reduce(
+        (total, document) => total + Buffer.byteLength(document.content, "utf8"),
+        0
+      ),
+      outputBytes: Buffer.byteLength(outputJson, "utf8")
+    };
 
     await this.store.saveStageAttempt(state.runId, stage.id, attempt, {
       "invocation.json": `${JSON.stringify(
@@ -339,7 +367,10 @@ export class Runtime {
           provider: result.provider,
           model: result.model,
           stageId: stage.id,
-          role: stage.role
+          role: stage.role,
+          startedAt: result.startedAt,
+          completedAt: result.completedAt,
+          ...metrics
         },
         null,
         2
@@ -349,7 +380,7 @@ export class Runtime {
         null,
         2
       )}\n`,
-      "output.json": `${JSON.stringify(result.output, null, 2)}\n`,
+      "output.json": outputJson,
       "validation.json": `${JSON.stringify(
         validation.success
           ? { valid: true }
@@ -360,7 +391,10 @@ export class Runtime {
     });
 
     if (!validation.success) {
-      await this.event(state, "stage.validation_failed", stage.id, { attempt });
+      await this.event(state, "stage.validation_failed", stage.id, {
+        attempt,
+        ...metrics
+      });
       if (attempt < stage.maxAttempts) {
         return;
       }
@@ -372,7 +406,8 @@ export class Runtime {
     if (validation.data.outcome !== "completed") {
       await this.event(state, "stage.outcome_rejected", stage.id, {
         attempt,
-        outcome: validation.data.outcome
+        outcome: validation.data.outcome,
+        ...metrics
       });
       throw new Error(
         `Stage ${stage.id} halted with outcome ${validation.data.outcome}: ${validation.data.summary}`
@@ -418,7 +453,8 @@ export class Runtime {
     }
     await this.event(state, "stage.completed", stage.id, {
       attempt,
-      artifactHash: sha256(artifact)
+      artifactHash: sha256(artifact),
+      ...metrics
     });
 
     if (stage.inputAfter) {

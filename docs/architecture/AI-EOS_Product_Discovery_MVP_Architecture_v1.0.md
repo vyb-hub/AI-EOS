@@ -160,6 +160,23 @@ Research must be bounded by configuration:
 Research stores source metadata and claim mappings, not complete copyrighted
 articles.
 
+## Performance Observability
+
+Every provider attempt records enough local metadata to explain Product
+Discovery latency without inspecting provider logs:
+
+- stage and attempt identifiers,
+- invocation, provider-start, and provider-completion timestamps,
+- provider and total stage duration in milliseconds,
+- context document count and UTF-8 byte size,
+- structured output byte size,
+- validation result or provider failure reason.
+
+The same duration fields are included in stage completion, validation-failure,
+negative-outcome, and provider-failure events. Metrics contain sizes and timing,
+not additional prompt content or credentials. DR-004 service targets are
+evaluated from persisted events and attempt manifests.
+
 ## Codex CLI Hardening
 
 Before EC-004 implementation:
