@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { basename, resolve } from "node:path";
+import { spawn } from "node:child_process";
 import { Command } from "commander";
 import { CodexCliProvider } from "./providers/codex-cli.js";
 import { FakeProvider } from "./providers/fake.js";
@@ -72,11 +73,12 @@ discovery
     "discovery depth: fast, standard, or deep",
     "fast"
   )
-  .action(async (ideaPath: string, options: { mode: string }) => {
+  .option("--preview", "open the self-refreshing Founder brief")
+  .action(async (ideaPath: string, options: { mode: string; preview?: boolean }) => {
     if (!["fast", "standard", "deep"].includes(options.mode)) {
       throw new Error("Discovery mode must be fast, standard, or deep.");
     }
-    const runtime = await createRuntime();
+    const runtime = await createRuntime(options.preview ?? false);
     printState(
       await runtime.startDiscovery(
         resolve(projectRoot(), ideaPath),
@@ -165,10 +167,17 @@ function projectRoot(): string {
   return resolve(program.opts<{ project: string }>().project);
 }
 
-async function createRuntime(): Promise<Runtime> {
+async function createRuntime(preview = false): Promise<Runtime> {
   const store = new FileStore(projectRoot());
   const config = await store.loadConfig();
-  const reportProgress = (message: string): void => console.log(message);
+  let previewOpened = false;
+  const reportProgress = (message: string): void => {
+    console.log(message);
+    if (preview && !previewOpened && message.includes("Living Product Brief ready · ")) {
+      previewOpened = true;
+      openPreview(message.split("Living Product Brief ready · ")[1] ?? "");
+    }
+  };
   const provider = (() => {
     if (config.runtime.provider === "codex-cli") {
       return new CodexCliProvider(
@@ -185,6 +194,15 @@ async function createRuntime(): Promise<Runtime> {
     throw new Error(`Unsupported provider: ${config.runtime.provider}`);
   })();
   return new Runtime(store, provider, reportProgress);
+}
+
+function openPreview(path: string): void {
+  if (!path) return;
+  const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
+  const args = process.platform === "win32" ? ["/c", "start", "", path] : [path];
+  const child = spawn(command, args, { detached: true, stdio: "ignore" });
+  child.on("error", (error) => console.error(`Could not open Founder preview: ${error.message}`));
+  child.unref();
 }
 
 function printState(state: {

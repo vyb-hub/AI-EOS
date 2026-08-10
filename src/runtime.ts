@@ -334,10 +334,12 @@ export class Runtime {
   ): Promise<void> {
     const stageStartedAt = Date.now();
     const attempt = (state.attemptByStage[stage.id] ?? 0) + 1;
-    this.progress(this.stageProgress(stage, state.discoveryMode));
+    const stageMessage = this.stageProgress(stage, state.discoveryMode);
+    this.progress(stageMessage);
     state.attemptByStage[stage.id] = attempt;
     state.updatedAt = new Date().toISOString();
     await this.store.saveState(state);
+    await this.updateProductBriefStatus(state, stageMessage);
     await this.event(state, "stage.started", stage.id, { attempt });
 
     const context = await this.compileContext(state, stage);

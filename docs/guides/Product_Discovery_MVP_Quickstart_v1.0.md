@@ -30,8 +30,13 @@ OpenAI API key is required.
 ## Start Discovery
 
 ```text
-node dist/src/cli.js --project <project-path> discovery start <idea-path> --mode fast
+node dist/src/cli.js --project <project-path> discovery start <idea-path> --mode fast --preview
 ```
+
+`--preview` opens the local Living Product Brief as soon as the run starts. The
+page refreshes itself while work is active, displays the current stage and an
+elapsed timer, and becomes static whenever the Runtime pauses for Founder input
+or approval. Omit the flag in headless or automated environments.
 
 The run stops at `awaiting_input`. Print the generated question-set path:
 

@@ -187,8 +187,11 @@ approval. Rendering is deterministic and never invokes an AI provider.
 The primary view prioritizes current status, progress, the next Founder action,
 latest findings, decisions, and structured competitor profiles. Detailed stage
 history remains available as an expandable audit view. The file path remains
-stable throughout the run so a Founder can keep one document open and refresh
-it while discovery progresses.
+stable throughout the run. While a stage is active, the HTML shows the current
+activity and elapsed time and refreshes itself every three seconds so persisted
+stage changes appear without Founder action. The optional CLI preview flag opens
+this local file as soon as it is created; rendering remains deterministic and
+requires no HTTP service or additional dependency.
 
 ## Codex CLI Hardening
 

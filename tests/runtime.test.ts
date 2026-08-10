@@ -14,6 +14,7 @@ import { validateEvidence } from "../src/evidence.js";
 import { FakeProvider } from "../src/providers/fake.js";
 import { Runtime } from "../src/runtime.js";
 import { FileStore } from "../src/store.js";
+import { renderProductBrief } from "../src/product-brief.js";
 
 async function fixture(): Promise<{
   root: string;
@@ -27,6 +28,28 @@ async function fixture(): Promise<{
   await writeFile(charter, "# Approved Charter\n\nBuild the fixture.\n", "utf8");
   return { root, charter, store };
 }
+
+test("active Founder brief self-refreshes and explains current work", () => {
+  const html = renderProductBrief({
+    schemaVersion: 1,
+    runId: "run_live_preview",
+    title: "Koottam",
+    mode: "fast",
+    status: "running",
+    ideaSummary: "A culture and movement space.",
+    completedStages: ["founder-intent"],
+    totalStages: 5,
+    nextAction: "Checking competitors and evidence (fast budget)",
+    competitors: [],
+    sections: [],
+    updatedAt: "2026-08-10T15:00:00.000Z"
+  });
+
+  assert.match(html, /Working now/);
+  assert.match(html, /Active for <span id="elapsed">/);
+  assert.match(html, /setTimeout\(\(\)=>location\.reload\(\),3000\)/);
+  assert.match(html, /Live preview enabled/);
+});
 
 test("starts deterministically and halts at architecture approval", async () => {
   const { charter, store } = await fixture();
