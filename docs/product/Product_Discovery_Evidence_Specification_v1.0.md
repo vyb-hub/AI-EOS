@@ -97,6 +97,8 @@ alternative records:
 ```text
 name
 competitorType
+customerJobOverlap
+relevanceReason
 location?
 targetCustomer?
 coreOffer
@@ -111,6 +113,18 @@ Every profile references at least one persisted evidence source. Unverified
 pricing is recorded as unknown, never inferred. The Runtime persists profiles
 in `evidence/competitors.json` and surfaces a concise competitor update as soon
 as Market Research completes.
+
+Classification follows the customer job rather than location or broad audience:
+
+- `direct` / `same_outcome`: substantially the same offer and outcome
+- `category` / `same_category`: the same learning category or outcome in a different format
+- `substitute` / `same_job`: a different solution to the same customer job
+- `behavioral` / `attention_only`: competes only for time, attention, or budget
+
+Behavioral alternatives are reported separately and never count toward the
+primary competitor portfolio. In Fast mode, the primary portfolio contains
+two or three profiles and must include at least one direct and one category
+competitor. Up to two additional behavioral alternatives may be recorded.
 
 ## Citation in Human-Readable Artifacts
 

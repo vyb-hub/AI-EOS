@@ -104,6 +104,13 @@ After completion:
 <run-dir>/final-report.md
 ```
 
+Every Fast run that reaches Product Readiness writes
+`<run-dir>/decision-dossier.html`, including when readiness returns
+`needs_changes`. The dossier retains Strategy, MVP Scope, Requirements, User
+Journey, Pilot Economics, Readiness Review, blocked-or-ready Engineering
+Handoff Status, Knowledge Capture, and the final decision. Research breadth
+remains bounded; information architecture remains complete.
+
 The Engineering Charter remains proposed. Product Discovery does not start
 Feature Development, modify application source, commit, push, publish, or
 deploy.

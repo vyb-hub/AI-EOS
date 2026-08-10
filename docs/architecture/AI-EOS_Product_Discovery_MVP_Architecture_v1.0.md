@@ -206,6 +206,20 @@ change presentation only and persist locally across automatic refreshes. Theme
 selection never changes evidence, approvals, Runtime state, or generated metric
 values.
 
+### Fast dossier completeness
+
+Discovery modes vary evidence breadth and latency budget, not the set of
+Founder-facing decisions. Fast mode retains five provider calls, but its
+Opportunity and Risk invocation must return five additional structured dossier
+sections: Product Strategy, detailed MVP Scope, Product Requirements, User
+Journey, and Pilot Economics. The Runtime rejects incomplete combined output.
+
+Product Readiness output is persisted even when its outcome is `needs_changes`.
+The Runtime then adds explicit Engineering Handoff Status, Knowledge Capture,
+and Final Decision sections and writes `decision-dossier.html`. An incomplete
+readiness result continues to block Engineering handoff and material capital;
+it no longer removes the review or final dossier from Founder view.
+
 ## Codex CLI Hardening
 
 Before EC-004 implementation:

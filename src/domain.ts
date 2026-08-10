@@ -124,10 +124,32 @@ export interface ProviderResult {
     sources?: EvidenceSource[] | undefined;
     claims?: EvidenceClaim[] | undefined;
     competitors?: CompetitorProfile[] | undefined;
+    dossierSections?: DossierSection[] | undefined;
   };
   raw: unknown;
   startedAt: string;
   completedAt: string;
+}
+
+export const dossierSectionIds = [
+  "product-strategy",
+  "mvp-scope",
+  "product-requirements",
+  "user-journey",
+  "pilot-economics",
+  "engineering-handoff-status",
+  "knowledge-capture",
+  "final-decision"
+] as const;
+
+export type DossierSectionId = (typeof dossierSectionIds)[number];
+
+export interface DossierSection {
+  sectionId: DossierSectionId;
+  summary: string;
+  findings: string[];
+  decisions: string[];
+  nextActions: string[];
 }
 
 export interface DiscoveryQuestion {
@@ -189,6 +211,9 @@ export interface EvidenceClaim {
 export interface CompetitorProfile {
   name: string;
   competitorType: "direct" | "category" | "substitute" | "behavioral";
+  /** Optional only so previously persisted briefs remain renderable. New provider output requires both fields. */
+  customerJobOverlap?: "same_outcome" | "same_category" | "same_job" | "attention_only";
+  relevanceReason?: string;
   location?: string | undefined;
   targetCustomer?: string | undefined;
   coreOffer: string;

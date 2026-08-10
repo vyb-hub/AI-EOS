@@ -129,6 +129,8 @@ const outputSchema = {
         properties: {
           name: { type: "string" },
           competitorType: { type: "string", enum: ["direct", "category", "substitute", "behavioral"] },
+          customerJobOverlap: { type: "string", enum: ["same_outcome", "same_category", "same_job", "attention_only"] },
+          relevanceReason: { type: "string" },
           location: { type: ["string", "null"] },
           targetCustomer: { type: ["string", "null"] },
           coreOffer: { type: "string" },
@@ -138,7 +140,34 @@ const outputSchema = {
           unknowns: { type: "array", items: { type: "string" } },
           sourceIds: { type: "array", items: { type: "string" } }
         },
-        required: ["name", "competitorType", "location", "targetCustomer", "coreOffer", "pricingStatus", "strengths", "weaknesses", "unknowns", "sourceIds"],
+        required: ["name", "competitorType", "customerJobOverlap", "relevanceReason", "location", "targetCustomer", "coreOffer", "pricingStatus", "strengths", "weaknesses", "unknowns", "sourceIds"],
+        additionalProperties: false
+      }
+    },
+    dossierSections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          sectionId: {
+            type: "string",
+            enum: [
+              "product-strategy",
+              "mvp-scope",
+              "product-requirements",
+              "user-journey",
+              "pilot-economics",
+              "engineering-handoff-status",
+              "knowledge-capture",
+              "final-decision"
+            ]
+          },
+          summary: { type: "string", minLength: 1 },
+          findings: { type: "array", items: { type: "string" } },
+          decisions: { type: "array", items: { type: "string" } },
+          nextActions: { type: "array", items: { type: "string" } }
+        },
+        required: ["sectionId", "summary", "findings", "decisions", "nextActions"],
         additionalProperties: false
       }
     }
@@ -152,7 +181,8 @@ const outputSchema = {
     "questions",
     "sources",
     "claims",
-    "competitors"
+    "competitors",
+    "dossierSections"
   ],
   additionalProperties: false
 } as const;
@@ -296,16 +326,19 @@ function renderPrompt(request: InvocationRequest): string {
       ? "Web research is allowed only for this Market Research stage. Cite each external claim with source metadata and an HTTPS URL."
       : "Do not access the network or use browser, Computer Use, AppleScript, plugins, or external integrations.",
     request.stage.id === "founder-discovery-questions"
-      ? "Return a bounded questions array with stable IDs; do not infer the Founder's answers."
+      ? "Return a bounded questions array with stable IDs; do not infer the Founder's answers. Ask separately about product competitors and what customers currently do instead; do not bundle product competitors with behavioral alternatives."
       : "",
     request.stage.id === "market-research"
-      ? "Return non-empty sources, claims, and competitor profiles that satisfy the Product Discovery evidence contract. Cover direct competitors, category competitors, substitutes, or behavioral alternatives as relevant. Every competitor must reference verified source IDs. Record unverified pricing as unknown. Open and verify every cited page. The source title, URL, and claim must describe the same content; never use a search snippet, redirect target, category page, or unrelated product page as evidence for a claim."
+      ? "Return non-empty sources, claims, and competitor profiles that satisfy the Product Discovery evidence contract. Classify by the customer job, not merely geography or audience: direct=same outcome and offer, category=same category/outcome with a different format, substitute=same customer job by a different solution, behavioral=competes only for time, attention, or budget. The required customerJobOverlap mapping is direct→same_outcome, category→same_category, substitute→same_job, behavioral→attention_only. Give a concrete relevanceReason. Research product competitors before behavioral alternatives. A gym is not a dance or cultural-learning competitor merely because it is nearby; normally classify it as behavioral, if included at all. Every competitor must reference verified source IDs. Record unverified pricing as unknown. Open and verify every cited page. The source title, URL, and claim must describe the same content; never use a search snippet, redirect target, category page, or unrelated product page as evidence for a claim."
       : request.stage.id === "founder-intent"
         ? "Return sources empty. Claims may record Founder-input provenance and supported inferences."
         : "Return empty sources, claims, and competitors arrays. Only Market Research may create or change evidence registry records.",
     request.stage.id === "founder-discovery-questions"
       ? "Return source and claim registries empty."
       : "Return the questions array empty; only Founder Discovery Questions may populate it.",
+    request.discoveryMode === "fast" && request.stage.id === "opportunity-risk"
+      ? "Return exactly five complete dossierSections: product-strategy, mvp-scope, product-requirements, user-journey, and pilot-economics. Preserve information depth despite the combined call. Each section must contain its own summary, findings, decisions, and next actions. Label unsupported numeric values as unknown or AI recommendations requiring Founder approval."
+      : "Return dossierSections empty; only the combined Fast Opportunity and Risk stage may populate them.",
     "Set outcome to completed only when this stage's objective is supported by evidence. Use needs_changes when earlier work must be revised, and failed when the stage cannot be completed.",
     "Return only the JSON object required by the supplied output schema.",
     "",
@@ -318,7 +351,7 @@ function discoveryBudgetInstruction(
 ): string {
   const budgets = {
     fast:
-      "Discovery mode is FAST. Prefer a useful directional answer. Market Research may use at most 3 competitors and 5 sources; stop when additional evidence will not change the decision. In Opportunity and Risk, also produce the bounded MVP recommendation because Fast mode does not run a separate Product Strategy stage. In Product Readiness Review, assess decision-brief readiness rather than engineering readiness.",
+      "Discovery mode is FAST. Research breadth is bounded, but dossier completeness must not be reduced. Market Research must return 2–3 primary product competitors, including at least one direct and one category competitor, using at most 5 sources. It may additionally return up to 2 behavioral alternatives; these do not consume or replace the primary competitor budget. Stop when additional evidence will not change the decision. In Opportunity and Risk, produce the complete Strategy, MVP Scope, Requirements, User Journey, and Pilot Economics dossier sections in the same provider call. In Product Readiness Review, assess the complete decision dossier and identify bounded Founder decisions required for readiness.",
     standard:
       "Discovery mode is STANDARD. Market Research may use at most 5 competitors and 10 sources; balance decision quality and latency.",
     deep:

@@ -49,16 +49,51 @@ export class FakeProvider implements Provider {
                 {
                   name: "Controlled fixture competitor",
                   competitorType: "direct" as const,
+                  customerJobOverlap: "same_outcome" as const,
+                  relevanceReason: "Offers the same outcome to the same target customer.",
                   coreOffer: "A deterministic competing offer.",
                   pricingStatus: "Not verified",
                   strengths: ["Existing alternative"],
                   weaknesses: ["Limited fixture evidence"],
                   unknowns: ["Current pricing"],
                   sourceIds: ["S-001"]
+                },
+                {
+                  name: "Controlled category provider",
+                  competitorType: "category" as const,
+                  customerJobOverlap: "same_category" as const,
+                  relevanceReason: "Serves the same category through a different delivery format.",
+                  coreOffer: "A deterministic category alternative.",
+                  pricingStatus: "Not verified",
+                  strengths: ["Established category presence"],
+                  weaknesses: ["Limited fixture evidence"],
+                  unknowns: ["Current enrollment"],
+                  sourceIds: ["S-001"]
                 }
               ]
             }
           : {};
+    const dossierSections =
+      request.discoveryMode === "fast" && request.stage.id === "opportunity-risk"
+        ? [
+            "product-strategy",
+            "mvp-scope",
+            "product-requirements",
+            "user-journey",
+            "pilot-economics"
+          ].map((sectionId) => ({
+            sectionId: sectionId as
+              | "product-strategy"
+              | "mvp-scope"
+              | "product-requirements"
+              | "user-journey"
+              | "pilot-economics",
+            summary: `Deterministic ${sectionId} dossier section.`,
+            findings: [`${sectionId} finding.`],
+            decisions: [`${sectionId} decision.`],
+            nextActions: [`${sectionId} next action.`]
+          }))
+        : [];
     const output = {
       outcome: "completed" as const,
       summary: `Deterministic ${request.stage.id} output for run ${request.runId}.`,
@@ -70,6 +105,7 @@ export class FakeProvider implements Provider {
       nextActions: request.stage.gateAfter
         ? [`Await ${request.stage.gateName}.`]
         : ["Advance according to the deterministic flow."],
+      dossierSections,
       ...discoveryExtras
     };
     return {

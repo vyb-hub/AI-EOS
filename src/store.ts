@@ -114,6 +114,13 @@ export class FileStore {
     ) as ProductBriefModel;
   }
 
+  async saveDecisionDossier(runId: string): Promise<string> {
+    const model = await this.loadProductBrief(runId);
+    const path = join(this.runDir(runId), "decision-dossier.html");
+    await this.atomicWrite(path, renderProductBrief(model));
+    return path;
+  }
+
   async saveStageAttempt(
     runId: string,
     stageId: StageId,
@@ -319,6 +326,21 @@ export class FileStore {
       "",
       "## Next Actions",
       ...result.output.nextActions.map((item) => `- ${item}`),
+      ...(result.output.dossierSections ?? []).flatMap((section) => [
+        "",
+        `## Dossier: ${section.sectionId}`,
+        "",
+        section.summary,
+        "",
+        "### Findings",
+        ...section.findings.map((item) => `- ${item}`),
+        "",
+        "### Decisions",
+        ...section.decisions.map((item) => `- ${item}`),
+        "",
+        "### Next Actions",
+        ...section.nextActions.map((item) => `- ${item}`)
+      ]),
       ""
     ].join("\n");
     const path = join(dir, "artifact.md");

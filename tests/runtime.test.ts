@@ -86,6 +86,51 @@ test("Founder brief presents needs_changes as a decision checkpoint", () => {
   assert.doesNotMatch(html, /Working now/);
 });
 
+test("Founder brief separates behavioral alternatives from product competitors", () => {
+  const common = {
+    coreOffer: "A verified offer.",
+    pricingStatus: "Unknown",
+    strengths: [],
+    weaknesses: [],
+    unknowns: [],
+    sourceIds: ["S-001"]
+  };
+  const html = renderProductBrief({
+    schemaVersion: 1,
+    runId: "run_competitor_taxonomy",
+    title: "Koottam",
+    mode: "fast",
+    status: "running",
+    ideaSummary: "End-to-end cultural learning.",
+    completedStages: ["market-research"],
+    totalStages: 5,
+    nextAction: "Assessing the opportunity",
+    competitors: [
+      {
+        ...common,
+        name: "Dance school",
+        competitorType: "direct",
+        customerJobOverlap: "same_outcome",
+        relevanceReason: "Offers sustained dance learning."
+      },
+      {
+        ...common,
+        name: "Nearby gym",
+        competitorType: "behavioral",
+        customerJobOverlap: "attention_only",
+        relevanceReason: "Competes for leisure time and budget."
+      }
+    ],
+    sections: [],
+    updatedAt: "2026-08-10T15:00:00.000Z"
+  });
+
+  assert.match(html, /<strong>1<\/strong><small>verified product competitors/);
+  assert.match(html, /Behavioral alternatives/);
+  assert.match(html, /Not product competitors/);
+  assert.match(html, /Why it is relevant/);
+});
+
 test("starts deterministically and halts at architecture approval", async () => {
   const { charter, store } = await fixture();
   const runtime = new Runtime(store, new FakeProvider());
@@ -441,8 +486,24 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
   assert.match(livingBrief, /Controlled fixture competitor/);
   assert.match(livingBrief, /Competitor landscape/);
   assert.match(livingBrief, /product-readiness-review/);
+  for (const section of [
+    "product-strategy",
+    "mvp-scope",
+    "product-requirements",
+    "user-journey",
+    "pilot-economics",
+    "engineering-handoff-status",
+    "knowledge-capture",
+    "final-decision"
+  ]) {
+    assert.match(livingBrief, new RegExp(section));
+  }
   assert.match(livingBrief, /completed/);
   assert.match(livingBrief, /Discovery complete/);
+  assert.match(
+    await readFile(join(store.runDir(state.runId), "decision-dossier.html"), "utf8"),
+    /final-decision/
+  );
 
   const events = await readFile(
     join(store.runDir(state.runId), "events.jsonl"),
@@ -464,6 +525,47 @@ test("Fast discovery persists an immediate brief and uses two Founder gates", as
     readFile(join(store.runDir(state.runId), "handoff", "engineering-charter.md")),
     /ENOENT/
   );
+});
+
+test("Fast discovery persists a needs_changes readiness review and decision dossier", async () => {
+  const { root, charter: idea, store } = await fixture();
+  const runtime = new Runtime(store, new ReadinessNeedsChangesProvider());
+  let state = await runtime.startDiscovery(idea);
+  const responsePath = join(root, "needs-changes-response.json");
+  await writeFile(
+    responsePath,
+    `${JSON.stringify({
+      schemaVersion: 1,
+      responseId: "response_needs_changes",
+      questionSetId: state.pendingInput?.questionSetId,
+      runId: state.runId,
+      actor: "founder",
+      submittedAt: new Date().toISOString(),
+      answers: { "Q-001": "Founders" }
+    })}\n`,
+    "utf8"
+  );
+  state = await runtime.respond(state.runId, responsePath);
+  state = await runtime.approve(state.runId);
+
+  assert.equal(state.status, "failed");
+  assert.match(state.lastError ?? "", /outcome needs_changes/);
+  assert.match(
+    await readFile(
+      join(store.runDir(state.runId), "stages", "product-readiness-review", "artifact.md"),
+      "utf8"
+    ),
+    /Required Founder launch decisions remain/
+  );
+  const dossier = await readFile(
+    join(store.runDir(state.runId), "decision-dossier.html"),
+    "utf8"
+  );
+  assert.match(dossier, /product-readiness-review/);
+  assert.match(dossier, /engineering-handoff-status/);
+  assert.match(dossier, /knowledge-capture/);
+  assert.match(dossier, /final-decision/);
+  assert.match(dossier, /needs Founder decisions/);
 });
 
 test("persists stage performance metrics for successful provider attempts", async () => {
@@ -706,6 +808,33 @@ class NeedsChangesProvider implements Provider {
         findings: [],
         decisions: [],
         nextActions: ["Revise the prior stage."]
+      },
+      raw: {},
+      startedAt: now,
+      completedAt: now
+    };
+  }
+}
+
+class ReadinessNeedsChangesProvider implements Provider {
+  readonly name = "readiness-needs-changes";
+  private readonly delegate = new FakeProvider();
+
+  async invoke(request: InvocationRequest): Promise<ProviderResult> {
+    if (request.stage.id !== "product-readiness-review") {
+      return this.delegate.invoke(request);
+    }
+    const now = new Date().toISOString();
+    return {
+      provider: this.name,
+      model: "fixture",
+      output: {
+        outcome: "needs_changes",
+        summary: "Required Founder launch decisions remain.",
+        findings: ["Pilot economics are incomplete."],
+        decisions: ["Do not open engineering handoff."],
+        nextActions: ["Set paid enrollment and contribution thresholds."],
+        dossierSections: []
       },
       raw: {},
       startedAt: now,

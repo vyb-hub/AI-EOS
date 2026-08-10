@@ -3,6 +3,7 @@ import { basename, resolve } from "node:path";
 import type {
   ApprovalRecord,
   ContextDocument,
+  DossierSection,
   DiscoveryMode,
   Provider,
   RunState,
@@ -309,6 +310,9 @@ export class Runtime {
         await this.event(state, "run.completed", undefined, {});
         await this.store.saveReport(state.runId, this.renderReport(state));
         await this.updateProductBriefStatus(state, "Discovery complete. Review the final brief and evidence.");
+        if (state.flowId === "product-discovery") {
+          await this.store.saveDecisionDossier(state.runId);
+        }
         break;
       }
 
@@ -319,7 +323,18 @@ export class Runtime {
         state.lastError = error instanceof Error ? error.message : String(error);
         state.updatedAt = new Date().toISOString();
         await this.store.saveState(state);
-        await this.updateProductBriefStatus(state, state.lastError);
+        await this.updateProductBriefStatus(
+          state,
+          state.lastError.includes("outcome needs_changes")
+            ? "More evidence is needed before launch. Review the Readiness Review and complete the open Founder decisions."
+            : state.lastError
+        );
+        if (
+          state.flowId === "product-discovery" &&
+          state.lastError.includes("outcome needs_changes")
+        ) {
+          await this.store.saveDecisionDossier(state.runId);
+        }
         await this.event(state, "run.failed", stage.id, {
           error: state.lastError
         });
@@ -425,9 +440,46 @@ export class Runtime {
     }
 
     if (validation.data.outcome !== "completed") {
+      const artifactPath = await this.store.saveCurrentStageArtifact(
+        state.runId,
+        stage.id,
+        result
+      );
+      const artifact = await readFile(artifactPath, "utf8");
+      if (state.flowId === "product-discovery") {
+        await this.updateProductBrief(
+          state,
+          {
+            stageId: stage.id,
+            summary: validation.data.summary,
+            findings: validation.data.findings,
+            decisions: validation.data.decisions,
+            nextActions: validation.data.nextActions,
+            completedAt: result.completedAt
+          },
+          validation.data.competitors ?? []
+        );
+        await this.updateDossierSections(
+          state,
+          validation.data.dossierSections ?? [],
+          result.completedAt
+        );
+        if (stage.id === "product-readiness-review") {
+          await this.addClosingDossierSections(
+            state,
+            validation.data.summary,
+            validation.data.findings,
+            validation.data.nextActions,
+            result.completedAt,
+            false
+          );
+          await this.store.saveDecisionDossier(state.runId);
+        }
+      }
       await this.event(state, "stage.outcome_rejected", stage.id, {
         attempt,
         outcome: validation.data.outcome,
+        artifactHash: sha256(artifact),
         ...metrics
       });
       throw new Error(
@@ -440,6 +492,26 @@ export class Runtime {
         throw new Error("Founder Discovery must produce at least one question.");
       }
     }
+    if (state.discoveryMode === "fast" && stage.id === "opportunity-risk") {
+      const requiredSections = [
+        "product-strategy",
+        "mvp-scope",
+        "product-requirements",
+        "user-journey",
+        "pilot-economics"
+      ] as const;
+      const sectionIds = (validation.data.dossierSections ?? []).map(
+        (section) => section.sectionId
+      );
+      if (
+        sectionIds.length !== requiredSections.length ||
+        requiredSections.some((sectionId) => !sectionIds.includes(sectionId))
+      ) {
+        throw new Error(
+          `Fast Opportunity and Risk must return complete dossier sections: ${requiredSections.join(", ")}.`
+        );
+      }
+    }
     if (stage.id === "market-research") {
       const evidence = validateEvidence(
         validation.data.sources ?? [],
@@ -450,13 +522,45 @@ export class Runtime {
       }
       const competitors = validation.data.competitors ?? [];
       const sourceIds = new Set(evidence.sources.map((source) => source.sourceId));
+      const expectedOverlap = {
+        direct: "same_outcome",
+        category: "same_category",
+        substitute: "same_job",
+        behavioral: "attention_only"
+      } as const;
       for (const competitor of competitors) {
+        if (competitor.customerJobOverlap !== expectedOverlap[competitor.competitorType]) {
+          throw new Error(
+            `Competitor ${competitor.name} has inconsistent type ${competitor.competitorType} and overlap ${competitor.customerJobOverlap}.`
+          );
+        }
         for (const sourceId of competitor.sourceIds) {
           if (!sourceIds.has(sourceId)) {
             throw new Error(
               `Competitor ${competitor.name} references missing source ${sourceId}.`
             );
           }
+        }
+      }
+      const primaryCompetitors = competitors.filter(
+        (competitor) => competitor.competitorType !== "behavioral"
+      );
+      const behavioralAlternatives = competitors.filter(
+        (competitor) => competitor.competitorType === "behavioral"
+      );
+      if (state.discoveryMode === "fast") {
+        if (
+          primaryCompetitors.length < 2 ||
+          primaryCompetitors.length > 3 ||
+          !primaryCompetitors.some((competitor) => competitor.competitorType === "direct") ||
+          !primaryCompetitors.some((competitor) => competitor.competitorType === "category")
+        ) {
+          throw new Error(
+            "Fast Market Research must return 2–3 primary competitors, including at least one direct and one category competitor."
+          );
+        }
+        if (behavioralAlternatives.length > 2) {
+          throw new Error("Fast Market Research may return at most 2 behavioral alternatives.");
         }
       }
       await this.store.saveEvidence(
@@ -466,9 +570,9 @@ export class Runtime {
         competitors
       );
       this.progress(
-        `Competitor analysis ready · ${competitors.length} profile(s) verified · ${evidence.sources.length} source(s)`
+        `Competitor analysis ready · ${primaryCompetitors.length} product competitor(s) verified · ${behavioralAlternatives.length} behavioral alternative(s) · ${evidence.sources.length} source(s)`
       );
-      for (const competitor of competitors.slice(0, 3)) {
+      for (const competitor of primaryCompetitors.slice(0, 3)) {
         this.progress(
           `${competitor.competitorType}: ${competitor.name} · pricing ${competitor.pricingStatus}`
         );
@@ -501,6 +605,22 @@ export class Runtime {
         nextActions: validation.data.nextActions,
         completedAt: result.completedAt
       }, validation.data.competitors ?? []);
+      await this.updateDossierSections(
+        state,
+        validation.data.dossierSections ?? [],
+        result.completedAt
+      );
+      if (stage.id === "product-readiness-review") {
+        await this.addClosingDossierSections(
+          state,
+          validation.data.summary,
+          validation.data.findings,
+          validation.data.nextActions,
+          result.completedAt,
+          true
+        );
+        await this.store.saveDecisionDossier(state.runId);
+      }
     }
     await this.event(state, "stage.completed", stage.id, {
       attempt,
@@ -571,6 +691,9 @@ export class Runtime {
         state,
         `Review and decide: ${state.pendingApproval.gateName}.`
       );
+      if (stage.id === "product-readiness-review") {
+        await this.store.saveDecisionDossier(state.runId);
+      }
       await this.event(state, "gate.awaiting", stage.id, {
         gateName: state.pendingApproval.gateName,
         artifactHashes: state.pendingApproval.artifactHashes
@@ -826,6 +949,73 @@ export class Runtime {
       updatedAt: new Date().toISOString()
     });
     this.progress(`Product Brief updated · ${section.stageId} · ${path}`);
+  }
+
+  private async updateDossierSections(
+    state: RunState,
+    sections: DossierSection[],
+    completedAt: string
+  ): Promise<void> {
+    for (const section of sections) {
+      await this.updateProductBrief(
+        state,
+        {
+          stageId: section.sectionId,
+          summary: section.summary,
+          findings: section.findings,
+          decisions: section.decisions,
+          nextActions: section.nextActions,
+          completedAt
+        },
+        []
+      );
+    }
+  }
+
+  private async addClosingDossierSections(
+    state: RunState,
+    readinessSummary: string,
+    readinessFindings: string[],
+    readinessActions: string[],
+    completedAt: string,
+    ready: boolean
+  ): Promise<void> {
+    const sections: DossierSection[] = [
+      {
+        sectionId: "engineering-handoff-status",
+        summary: ready
+          ? "Engineering handoff is available after Founder Readiness Approval."
+          : "Engineering handoff is blocked until the readiness gaps are resolved and approved.",
+        findings: readinessFindings,
+        decisions: [
+          ready
+            ? "Do not begin implementation until the separate Engineering Charter is approved."
+            : "Do not generate or execute an Engineering Charter from incomplete readiness evidence."
+        ],
+        nextActions: readinessActions
+      },
+      {
+        sectionId: "knowledge-capture",
+        summary: "Completed discovery evidence, decisions, assumptions, and unresolved gaps are preserved in this dossier.",
+        findings: [
+          "Founder intent, market evidence, competitor profiles, product direction, and readiness findings remain traceable in the evidence trail."
+        ],
+        decisions: ["Preserve unresolved items as explicit gaps rather than silently treating them as approved."],
+        nextActions: readinessActions
+      },
+      {
+        sectionId: "final-decision",
+        summary: readinessSummary,
+        findings: readinessFindings,
+        decisions: [
+          ready
+            ? "The dossier is ready for Founder Readiness Approval."
+            : "The product direction may continue through bounded validation, but engineering and material capital remain blocked."
+        ],
+        nextActions: readinessActions
+      }
+    ];
+    await this.updateDossierSections(state, sections, completedAt);
   }
 
   private async updateProductBriefStatus(

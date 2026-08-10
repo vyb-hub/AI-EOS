@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { stageIds } from "./domain.js";
+import { dossierSectionIds, stageIds } from "./domain.js";
 
 export const stageOutputSchema = z.object({
   outcome: z.enum(["completed", "needs_changes", "failed"]),
@@ -7,6 +7,17 @@ export const stageOutputSchema = z.object({
   findings: z.array(z.string()),
   decisions: z.array(z.string()),
   nextActions: z.array(z.string()),
+  dossierSections: z
+    .array(
+      z.object({
+        sectionId: z.enum(dossierSectionIds),
+        summary: z.string().min(1),
+        findings: z.array(z.string()),
+        decisions: z.array(z.string()),
+        nextActions: z.array(z.string())
+      })
+    )
+    .optional(),
   questions: z
     .array(
       z.object({
@@ -31,6 +42,8 @@ export const stageOutputSchema = z.object({
       z.object({
         name: z.string().min(1),
         competitorType: z.enum(["direct", "category", "substitute", "behavioral"]),
+        customerJobOverlap: z.enum(["same_outcome", "same_category", "same_job", "attention_only"]),
+        relevanceReason: z.string().min(1),
         location: z.string().min(1).nullable().optional().transform((value) => value ?? undefined),
         targetCustomer: z.string().min(1).nullable().optional().transform((value) => value ?? undefined),
         coreOffer: z.string().min(1),

@@ -1,7 +1,7 @@
-import type { CompetitorProfile, DiscoveryMode, RunStatus, StageId } from "./domain.js";
+import type { CompetitorProfile, DiscoveryMode, DossierSectionId, RunStatus, StageId } from "./domain.js";
 
 export interface ProductBriefSection {
-  stageId: StageId;
+  stageId: StageId | DossierSectionId;
   summary: string;
   findings: string[];
   decisions: string[];
@@ -25,12 +25,21 @@ export interface ProductBriefModel {
 }
 
 export function renderProductBrief(model: ProductBriefModel): string {
+  const primaryCompetitors = model.competitors.filter(
+    (competitor) => competitor.competitorType !== "behavioral"
+  );
+  const behavioralAlternatives = model.competitors.filter(
+    (competitor) => competitor.competitorType === "behavioral"
+  );
   const progress = Math.round(
     (model.completedStages.length / Math.max(1, model.totalStages)) * 100
   );
   const latest = model.sections.at(-1);
   const isActive = model.status === "running";
-  const needsFounderDecisions = model.status === "failed" && model.nextAction.includes("outcome needs_changes");
+  const needsFounderDecisions =
+    model.status === "failed" &&
+    (model.nextAction.includes("outcome needs_changes") ||
+      model.sections.some((section) => section.stageId === "product-readiness-review"));
   const statusLabel = needsFounderDecisions
     ? "needs Founder decisions"
     : model.status.replaceAll("_", " ");
@@ -38,7 +47,7 @@ export function renderProductBrief(model: ProductBriefModel): string {
   const actionCount = latest?.nextActions.length ?? 0;
   const metricCards: Array<readonly [string, string, string]> = [
     ["Progress", `${progress}%`, `${model.completedStages.length} of ${model.totalStages} stages`],
-    ["Evidence", `${model.competitors.length}`, "verified competitor profiles"],
+    ["Evidence", `${primaryCompetitors.length}`, "verified product competitors"],
     ["Decisions", `${decisionCount}`, "recorded in this brief"],
     ["Open actions", `${actionCount}`, needsFounderDecisions ? "required for readiness" : "from the latest stage"]
   ];
@@ -54,7 +63,8 @@ export function renderProductBrief(model: ProductBriefModel): string {
 <section class="metrics" id="metrics">${metricCards.map(([label, value, detail]) => `<article class="metric"><div class="label">${escapeHtml(label)}</div><strong>${escapeHtml(value)}</strong><small>${escapeHtml(detail)}</small></article>`).join("")}</section>
 <div class="grid"><section class="card"><div class="label">Executive finding</div><p class="executive-copy">${escapeHtml(latest?.summary ?? "Discovery is starting")}</p>${list((latest?.findings ?? []).slice(0, 5))}</section><aside class="card action${needsFounderDecisions ? " needs-decisions" : ""}"><div class="label">${needsFounderDecisions ? "Founder decisions required" : "Next Founder action"}</div><p class="action-copy">${escapeHtml(model.nextAction)}</p>${list(latest?.nextActions ?? [])}</aside></div>
 ${isActive ? `<section class="card working" aria-live="polite"><div class="label"><span class="pulse"></span>Working now</div><h2>${escapeHtml(model.nextAction)}</h2><p class="muted">Active for <span id="elapsed">0 seconds</span>. Persisted progress appears automatically.</p></section>` : ""}
-<section class="section" id="competition"><div class="section-head"><div><div class="label">Market evidence</div><h2>Competitor landscape</h2></div><span class="muted">${model.competitors.length ? `${model.competitors.length} verified profiles` : "Research pending"}</span></div><div class="competitors">${model.competitors.map(renderCompetitor).join("") || '<article class="competitor muted">Verified competitor profiles will appear here during market research.</article>'}</div></section>
+<section class="section" id="competition"><div class="section-head"><div><div class="label">Market evidence</div><h2>Competitor landscape</h2></div><span class="muted">${primaryCompetitors.length ? `${primaryCompetitors.length} verified profiles` : "Research pending"}</span></div><div class="competitors">${primaryCompetitors.map(renderCompetitor).join("") || '<article class="competitor muted">Verified product competitor profiles will appear here during market research.</article>'}</div></section>
+${behavioralAlternatives.length ? `<section class="section" id="alternatives"><div class="section-head"><div><div class="label">Customer behavior</div><h2>Behavioral alternatives</h2></div><span class="muted">Not product competitors</span></div><p class="muted">These options compete for the customer’s time, attention, or budget. They are tracked separately and do not count as competitors.</p><div class="competitors">${behavioralAlternatives.map(renderCompetitor).join("")}</div></section>` : ""}
 <section class="card section audit" id="evidence"><div class="section-head"><div><div class="label">Traceability</div><h2>Decisions and evidence</h2></div><span class="muted">${model.sections.length} completed sections</span></div>${model.sections.map(renderSection).join("") || '<p class="muted">Stage evidence will appear here as it is persisted.</p>'}</section>
 <p class="muted footer">Updated ${escapeHtml(model.updatedAt)}${isActive ? " · Live preview enabled" : ""}.</p>
 </main></div><script>
@@ -72,7 +82,7 @@ updateElapsed();setInterval(updateElapsed,1000);setTimeout(()=>location.reload()
 }
 
 function renderCompetitor(item: CompetitorProfile): string {
-  return `<article class="competitor"><span class="tag">${escapeHtml(item.competitorType)}</span><h3>${escapeHtml(item.name)}</h3>${item.location ? `<p class="muted">${escapeHtml(item.location)}</p>` : ""}<p>${escapeHtml(item.coreOffer)}</p><p class="pricing"><strong>Pricing</strong><br>${escapeHtml(item.pricingStatus)}</p>${item.strengths.length ? `<p><strong>Strengths</strong><br>${escapeHtml(item.strengths.join(" · "))}</p>` : ""}${item.unknowns.length ? `<p class="muted"><strong>Still unknown</strong><br>${escapeHtml(item.unknowns.join(" · "))}</p>` : ""}</article>`;
+  return `<article class="competitor"><span class="tag">${escapeHtml(item.competitorType)}</span><h3>${escapeHtml(item.name)}</h3>${item.location ? `<p class="muted">${escapeHtml(item.location)}</p>` : ""}<p>${escapeHtml(item.coreOffer)}</p>${item.relevanceReason ? `<p><strong>Why it is relevant</strong><br>${escapeHtml(item.relevanceReason)}</p>` : ""}<p class="pricing"><strong>Pricing</strong><br>${escapeHtml(item.pricingStatus)}</p>${item.strengths.length ? `<p><strong>Strengths</strong><br>${escapeHtml(item.strengths.join(" · "))}</p>` : ""}${item.unknowns.length ? `<p class="muted"><strong>Still unknown</strong><br>${escapeHtml(item.unknowns.join(" · "))}</p>` : ""}</article>`;
 }
 
 function renderSection(section: ProductBriefSection): string {
