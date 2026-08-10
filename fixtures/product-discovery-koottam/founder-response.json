@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "responseId": "response_koottam_r1",
+  "questionSetId": "questions_355b000f-2d00-4edb-b906-b5697952c8b2",
+  "runId": "run_fd7eef84-b400-4c5f-86aa-49911c7c6322",
+  "actor": "founder",
+  "submittedAt": "2026-08-06T18:00:00.000Z",
+  "answers": {
+    "PDQ-001": "Culture and wellness enthusiasts",
+    "PDQ-002": "No authentic cultural/movement outlet",
+    "PDQ-003": "Consistent practice + skill progress",
+    "PDQ-004": "Scheduled movement or cultural classes",
+    "PDQ-005": "Class or event fees",
+    "PDQ-006": "Currently only get a bit of cultural learning, full skill learning, and community building scattered across different places (some classes, some social spaces), not all together in one venue",
+    "PDQ-007": "Kakkanad + Infopark/SmartCity belt, ~20 min drive",
+    "PDQ-008": "A specific plot in Kakkanad has been identified; lease/purchase terms are pending, not yet finalized",
+    "PDQ-009": "Up to the full ₹20L build cost",
+    "PDQ-010": "Founder is part-time / running this as a side project; will need hired instructors/staff for day-to-day operations",
+    "PDQ-011": "The open pavilion and authentic movement/culture focus (dance, Kalari) are non-negotiable; the cafe and office block can be deferred or scaled down",
+    "PDQ-012": "Rent a temporary hall or space nearby to run pilot classes before committing capital to the permanent ₹20L build",
+    "PDQ-013": "Consistent paid attendance sustained over 6 months"
+  }
+}

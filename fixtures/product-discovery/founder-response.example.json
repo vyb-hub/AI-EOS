@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "responseId": "response_replace_me",
+  "questionSetId": "questions_replace_me",
+  "runId": "run_replace_me",
+  "actor": "founder",
+  "submittedAt": "2026-07-30T00:00:00.000Z",
+  "answers": {
+    "Q-001": "Independent software founders"
+  },
+  "notes": "Replace IDs and answer keys with those from the active question set."
+}

@@ -273,7 +273,7 @@ On 29 July 2026, the Founder:
 1. conditionally approved EC-002 under its Strategic AI review,
 2. approved EC-003,
 3. approved this architecture,
-4. confirmed OpenAI as the initial provider,
+4. confirmed Codex CLI as the initial provider,
 5. selected a local fixture inside AI-EOS as the controlled validation repository.
 
 Implementation is authorized. Source-control and deployment permissions remain unchanged.

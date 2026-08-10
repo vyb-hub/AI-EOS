@@ -37,20 +37,24 @@ It is the layer beneath the code — the system that tells every collaborator, h
 
 ## Current state
 
-**Phase 0 — Blueprint, now focused on Runtime MVP alignment.**
+**Phase 0 — Blueprint, now focused on the Product Discovery MVP.**
 
-The files here are a deliberate starter pack. The full AI-EOS is envisioned as 80–150 pages of governance, philosophy, and tooling. Nothing has been built against a charter yet. That is correct. The blueprint comes first.
+The files here are a deliberate starter pack. The full AI-EOS is envisioned as
+80–150 pages of governance, philosophy, and tooling. The local Runtime MVP has
+now been built and accepted; the blueprint continues through small,
+Founder-governed MVPs.
 
-**Top priority:** Deliver a narrow, local-first AI-EOS Runtime MVP that proves the governed Feature Development flow.
+**Top priority:** Deliver the Product Discovery MVP: raw Founder idea to an
+evidence-backed Product Definition and proposed Engineering Charter.
 
 **Latest completed charter:** EC-003 — Build the AI-EOS Runtime MVP.
 
-**Current status:** The local-first Runtime MVP is implemented, verified, and
-Founder-accepted. No new implementation charter is active.
+**Current status:** The local-first Runtime MVP is implemented, verified,
+Founder-accepted, and pushed. EC-004 and its Product Discovery design package
+are Founder-approved, and implementation is active.
 
-**Next MVP priority:** Product Discovery — transform a raw Founder idea into an
-evidence-backed MVP definition and approved Engineering Charter. The priority is
-recorded in DR-003; implementation requires a new charter.
+**Next gate:** Complete the Product Discovery Runtime extensions and select one
+controlled test idea before live validation.
 
 ---
 
@@ -77,7 +81,9 @@ recorded in DR-003; implementation requires a new charter.
 | [`docs/decisions/DR-001_Runtime_MVP_Priority_v1.0.md`](./docs/decisions/DR-001_Runtime_MVP_Priority_v1.0.md) | Founder decision making the Runtime MVP the top priority. |
 | [`docs/decisions/DR-003_Product_Discovery_Next_MVP_v1.0.md`](./docs/decisions/DR-003_Product_Discovery_Next_MVP_v1.0.md) | Founder decision making Product Discovery the next MVP. |
 | [`docs/charters/EC-003_Runtime_MVP_v1.0.md`](./docs/charters/EC-003_Runtime_MVP_v1.0.md) | Completed Runtime MVP Engineering Charter. |
+| [`docs/charters/EC-004_Product_Discovery_MVP_v1.0.md`](./docs/charters/EC-004_Product_Discovery_MVP_v1.0.md) | Proposed Product Discovery MVP Engineering Charter. |
 | [`docs/architecture/AI-EOS_Runtime_MVP_Architecture_v1.0.md`](./docs/architecture/AI-EOS_Runtime_MVP_Architecture_v1.0.md) | Proposed MVP architecture. |
+| [`docs/architecture/AI-EOS_Product_Discovery_MVP_Architecture_v1.0.md`](./docs/architecture/AI-EOS_Product_Discovery_MVP_Architecture_v1.0.md) | Proposed Product Discovery MVP architecture. |
 | [`AI-EOS_Context_v2.0.md`](./AI-EOS_Context_v2.0.md) | Previous version. Superseded. Preserved for reference. |
 | [`AI-EOS_Context_v1.0.md`](./AI-EOS_Context_v1.0.md) | Original version. Superseded. Preserved for reference. |
 | [`AI-EOS_Context_Update_v2.2.md`](./AI-EOS_Context_Update_v2.2.md) | Source update that produced v2.1 (Documentation-First development & lifecycle governance). |

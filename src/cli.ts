@@ -5,6 +5,7 @@ import { CodexCliProvider } from "./providers/codex-cli.js";
 import { FakeProvider } from "./providers/fake.js";
 import { Runtime } from "./runtime.js";
 import { FileStore } from "./store.js";
+import type { DiscoveryMode } from "./domain.js";
 
 const program = new Command();
 
@@ -31,6 +32,7 @@ program.command("validate").action(async () => {
 });
 
 const run = program.command("run");
+const discovery = program.command("discovery");
 
 run
   .command("start")
@@ -60,6 +62,74 @@ run
   .argument("<run-id>")
   .action(async (runId: string) => {
     printState(await (await createRuntime()).resume(runId));
+  });
+
+discovery
+  .command("start")
+  .argument("<idea-path>")
+  .option(
+    "--mode <mode>",
+    "discovery depth: fast, standard, or deep",
+    "fast"
+  )
+  .action(async (ideaPath: string, options: { mode: string }) => {
+    if (!["fast", "standard", "deep"].includes(options.mode)) {
+      throw new Error("Discovery mode must be fast, standard, or deep.");
+    }
+    const runtime = await createRuntime();
+    printState(
+      await runtime.startDiscovery(
+        resolve(projectRoot(), ideaPath),
+        options.mode as DiscoveryMode
+      )
+    );
+  });
+
+discovery
+  .command("questions")
+  .argument("<run-id>")
+  .action(async (runId: string) => {
+    const state = await (await createRuntime()).status(runId);
+    if (!state.pendingInput) {
+      throw new Error(`Run ${runId} is not awaiting Founder input.`);
+    }
+    console.log(Object.keys(state.pendingInput.artifactHashes)[0]);
+  });
+
+discovery
+  .command("respond")
+  .argument("<run-id>")
+  .requiredOption("--file <answers-path>")
+  .action(async (runId: string, options: { file: string }) => {
+    printState(
+      await (await createRuntime()).respond(
+        runId,
+        resolve(projectRoot(), options.file)
+      )
+    );
+  });
+
+discovery
+  .command("revise")
+  .argument("<run-id>")
+  .requiredOption("--file <answers-path>")
+  .action(async (runId: string, options: { file: string }) => {
+    printState(
+      await (await createRuntime()).reviseFounderResponse(
+        runId,
+        resolve(projectRoot(), options.file)
+      )
+    );
+  });
+
+discovery
+  .command("revise-research")
+  .argument("<run-id>")
+  .requiredOption("--reason <reason>")
+  .action(async (runId: string, options: { reason: string }) => {
+    printState(
+      await (await createRuntime()).reviseResearch(runId, options.reason)
+    );
   });
 
 program
@@ -98,16 +168,23 @@ function projectRoot(): string {
 async function createRuntime(): Promise<Runtime> {
   const store = new FileStore(projectRoot());
   const config = await store.loadConfig();
+  const reportProgress = (message: string): void => console.log(message);
   const provider = (() => {
     if (config.runtime.provider === "codex-cli") {
-      return new CodexCliProvider(store.projectRoot, config.runtime.model);
+      return new CodexCliProvider(
+        store.projectRoot,
+        config.runtime.model,
+        config.runtime.codexExecutable,
+        300_000,
+        reportProgress
+      );
     }
     if (config.runtime.provider === "fake") {
       return new FakeProvider();
     }
     throw new Error(`Unsupported provider: ${config.runtime.provider}`);
   })();
-  return new Runtime(store, provider);
+  return new Runtime(store, provider, reportProgress);
 }
 
 function printState(state: {
@@ -115,6 +192,7 @@ function printState(state: {
   status: string;
   stageIndex: number;
   pendingApproval?: { gateName: string; stageId: string };
+  pendingInput?: { questionSetId: string; stageId: string };
   lastError?: string;
 }): void {
   console.log(`Run: ${state.runId}`);
@@ -123,6 +201,11 @@ function printState(state: {
   if (state.pendingApproval) {
     console.log(
       `Gate: ${state.pendingApproval.gateName} (${state.pendingApproval.stageId})`
+    );
+  }
+  if (state.pendingInput) {
+    console.log(
+      `Input: ${state.pendingInput.questionSetId} (${state.pendingInput.stageId})`
     );
   }
   if (state.lastError) {

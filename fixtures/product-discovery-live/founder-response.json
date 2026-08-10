@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "responseId": "response_packaging_founder_001",
+  "questionSetId": "questions_551f84f3-8c16-4356-a4cc-11ad011a53e7",
+  "runId": "run_2f2601fa-9b66-4f5b-9045-5f4149253cb3",
+  "actor": "founder",
+  "submittedAt": "2026-07-30T11:15:00.000Z",
+  "answers": {
+    "pd_customer_01": "Small businesses selling small ticket size items - ~100 units.",
+    "pd_problem_01": "Most options today operate at scale and that scale cant be achieved by small businesses. Planning to solve that problem where users can come on the portal and place the order.",
+    "pd_outcome_01": "Customers have to like the quality of the sample order and proceed to order fulfilment within a weeks time.",
+    "pd_workflow_01": "No idea, you will have to figure out. Currently no one - is my guess.",
+    "pd_alternatives_01": "Not sure.",
+    "pd_market_01": "Beverages, cakes and something narrower if possible.",
+    "pd_business_model_01": "Pay per unit, by the customer.",
+    "pd_constraints_01": "Not sure.",
+    "pd_success_01": "We need to understand what kind of category they want and the measurement.",
+    "pd_nonnegotiables_01": "AI design can be avoided since this adds to the cost. The 360-degree packaging preview must be included.",
+    "pd_scope_01": "user - landing on the website via ad - placing an order - receiving sample - liking it - placing a bulk order"
+  },
+  "notes": "Direct Founder responses supplied during the governed live Product Discovery test. Unknowns must remain explicit research gaps."
+}

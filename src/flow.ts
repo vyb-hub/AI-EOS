@@ -77,3 +77,105 @@ export const featureDevelopmentFlow: FlowDefinition = {
     }
   ]
 };
+
+export const productDiscoveryFlow: FlowDefinition = {
+  id: "product-discovery",
+  version: 1,
+  stages: [
+    {
+      id: "founder-discovery-questions",
+      role: "product_discovery_ai",
+      contextSources: ["charter"],
+      gateAfter: false,
+      inputAfter: true,
+      maxAttempts: 2
+    },
+    {
+      id: "founder-intent",
+      role: "product_discovery_ai",
+      contextSources: ["charter", "founder-discovery-questions", "founder-response"],
+      gateAfter: true,
+      gateName: "Founder Intent Approval",
+      maxAttempts: 2
+    },
+    {
+      id: "market-research",
+      role: "market_research_ai",
+      contextSources: ["charter", "founder-intent"],
+      gateAfter: false,
+      networkAccess: true,
+      maxAttempts: 2
+    },
+    {
+      id: "opportunity-risk",
+      role: "product_strategy_ai",
+      contextSources: ["founder-intent", "market-research"],
+      gateAfter: true,
+      gateName: "Research Evidence Approval",
+      maxAttempts: 2
+    },
+    {
+      id: "product-strategy",
+      role: "product_strategy_ai",
+      contextSources: ["founder-intent", "market-research", "opportunity-risk"],
+      gateAfter: true,
+      gateName: "MVP Scope Approval",
+      maxAttempts: 2
+    },
+    {
+      id: "product-requirements",
+      role: "product_definition_ai",
+      contextSources: ["founder-intent", "product-strategy"],
+      gateAfter: false,
+      maxAttempts: 2
+    },
+    {
+      id: "user-journey",
+      role: "product_definition_ai",
+      contextSources: ["product-strategy", "product-requirements"],
+      gateAfter: false,
+      maxAttempts: 2
+    },
+    {
+      id: "product-readiness-review",
+      role: "product_review_ai",
+      contextSources: [
+        "founder-intent",
+        "market-research",
+        "opportunity-risk",
+        "product-strategy",
+        "product-requirements",
+        "user-journey"
+      ],
+      gateAfter: true,
+      gateName: "Product Readiness Approval",
+      maxAttempts: 2
+    },
+    {
+      id: "engineering-charter-handoff",
+      role: "knowledge_ai",
+      contextSources: [
+        "founder-intent",
+        "product-strategy",
+        "product-requirements",
+        "user-journey",
+        "product-readiness-review"
+      ],
+      gateAfter: false,
+      maxAttempts: 2
+    },
+    {
+      id: "product-knowledge-capture",
+      role: "knowledge_ai",
+      contextSources: ["engineering-charter-handoff"],
+      gateAfter: false,
+      maxAttempts: 2
+    }
+  ]
+};
+
+export function flowById(id: FlowDefinition["id"]): FlowDefinition {
+  return id === "product-discovery"
+    ? productDiscoveryFlow
+    : featureDevelopmentFlow;
+}

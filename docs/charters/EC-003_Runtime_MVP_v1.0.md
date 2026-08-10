@@ -12,7 +12,8 @@ Build a local-first CLI Runtime that proves AI-EOS can execute one approved Engi
 
 ## Primary User
 
-The initial user is a Founder operating a software project locally with one AI provider credential and an approved Engineering Charter.
+The initial user is a Founder operating a software project locally with an
+authenticated Codex CLI session and an approved Engineering Charter.
 
 ## In Scope
 
@@ -127,7 +128,7 @@ The initial user is a Founder operating a software project locally with one AI p
 - [x] Founder approves this Charter
 - [x] Founder approves Runtime MVP Architecture v1.0
 - [x] Scope and non-goals are understood
-- [x] Initial provider confirmed: OpenAI
+- [x] Initial provider confirmed: Codex CLI
 - [x] Controlled validation repository: local fixture inside AI-EOS
 
 ## Completion Evidence

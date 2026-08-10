@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI-EOS Product Discovery — Decision Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a2d;
+      --panel-2: #18233b;
+      --line: #293754;
+      --text: #edf2ff;
+      --muted: #a9b5cc;
+      --accent: #72e1b6;
+      --accent-2: #78a9ff;
+      --warn: #ffcf70;
+      --danger: #ff8e9e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 85% 5%, #18345b 0, transparent 28rem),
+        radial-gradient(circle at 5% 40%, #123b38 0, transparent 24rem),
+        var(--bg);
+      color: var(--text);
+      font: 15px/1.65 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+    a { color: #9bc0ff; }
+    .shell { max-width: 1180px; margin: auto; padding: 48px 24px 80px; }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1 { max-width: 850px; margin: 10px 0 12px; font-size: clamp(34px, 6vw, 64px); line-height: 1.02; }
+    h2 { margin: 0 0 18px; font-size: 26px; }
+    h3 { margin: 0 0 8px; font-size: 17px; }
+    p { margin: 0 0 14px; }
+    .lead { max-width: 820px; color: var(--muted); font-size: 18px; }
+    .status {
+      display: inline-flex;
+      gap: 9px;
+      align-items: center;
+      margin-top: 22px;
+      padding: 8px 13px;
+      border: 1px solid #476653;
+      border-radius: 999px;
+      background: #173329;
+      color: #bdf8dc;
+      font-weight: 700;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 34px 0; }
+    .metric, .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(24,35,59,.95), rgba(15,23,40,.95));
+      box-shadow: 0 18px 45px rgba(0,0,0,.2);
+    }
+    .metric { padding: 20px; }
+    .metric strong { display: block; font-size: 28px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .tabs {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 0 -10px 24px;
+      padding: 14px 10px;
+      background: rgba(11,16,32,.88);
+      backdrop-filter: blur(18px);
+    }
+    button {
+      flex: none;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button.active { border-color: #558d78; background: #19372f; color: #c6f8e4; }
+    section[data-panel] {
+      display: block;
+      margin-top: 34px;
+      padding-top: 18px;
+      scroll-margin-top: 82px;
+    }
+    section[data-panel]::before {
+      content: attr(data-title);
+      display: block;
+      margin-bottom: 14px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .card { padding: 26px; margin-bottom: 18px; }
+    .callout { border-left: 4px solid var(--accent); }
+    .warning { border-left-color: var(--warn); }
+    .risk { border-left-color: var(--danger); }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li { margin: 8px 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .source {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 7px;
+      background: #243753;
+      color: #c8dbff;
+      font: 700 12px/1.4 ui-monospace, SFMono-Regular, monospace;
+    }
+    .tag {
+      display: inline-block;
+      margin: 5px 5px 0 0;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .claim { border-left: 3px solid var(--accent-2); }
+    .claim.inference { border-left-color: var(--warn); }
+    .claim p { color: #dce6fa; }
+    .meta { color: var(--muted); font-size: 12px; }
+    .footer { margin-top: 44px; color: var(--muted); font-size: 13px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    td strong { color: var(--text); }
+    @media (max-width: 760px) {
+      .metrics, .grid { grid-template-columns: 1fr; }
+      .shell { padding: 30px 16px 60px; }
+      .card { padding: 20px; }
+    }
+    @media print {
+      :root { color-scheme: light; }
+      body { background: #fff; color: #111; }
+      .tabs { display: none; }
+      section[data-panel] { display: block !important; break-inside: avoid; }
+      .card, .metric { background: #fff; box-shadow: none; border-color: #bbb; }
+      .lead, .meta, .metric span, .footer { color: #444; }
+      a { color: #164ea3; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="eyebrow">AI-EOS · Product Discovery · Live Evidence</div>
+    <h1>Custom-branded packaging platform</h1>
+    <p class="lead">Revised market evidence for an India-focused platform offering low-volume custom packaging, a mandatory 360° preview, sample ordering, and a sample-to-bulk journey.</p>
+    <div class="status"><span class="dot"></span> Awaiting MVP Scope Approval</div>
+
+    <div class="metrics">
+      <div class="metric"><strong>5</strong><span>Verified sources</span></div>
+      <div class="metric"><strong>13</strong><span>Traceable claims</span></div>
+      <div class="metric"><strong>100</strong><span>Target units per order</span></div>
+      <div class="metric"><strong>15/15</strong><span>Runtime tests passed</span></div>
+    </div>
+
+    <div class="card callout">
+      <div class="eyebrow">Study summary</div>
+      <h2>What the research says</h2>
+      <p>This study examined whether small Indian businesses are underserved when ordering roughly 100 units of custom-branded food or beverage packaging, and whether a 360° preview plus sample-to-bulk ordering could form a differentiated product.</p>
+      <p>The evidence rejects the broad assumption that low-volume custom packaging is unavailable. Cake boxes at 100 units already exist in India, international suppliers offer low-volume custom cups, and established providers already use 3D previews, digital proofs, sample packs, or test runs.</p>
+      <p>The remaining opportunity is narrower and still unvalidated: full-color disposable cups around 100 units for Indian cafés and beverage sellers, supported by manufacturable 360° visualization, transparent all-in pricing, proof confidence, and easy repeat ordering.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Comparison summary</div>
+      <h2>How the five providers compare</h2>
+      <div class="grid">
+        <div>
+          <h3>Closest relevant benchmarks</h3>
+          <ul>
+            <li><strong>PrintStop</strong> proves that Indian businesses can already order custom cake boxes at a 100-unit minimum.</li>
+            <li><strong>The Cup Store</strong> proves that 100-unit custom cups are possible, but additional print colors can raise minimums dramatically.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Experience benchmarks</h3>
+          <ul>
+            <li><strong>Packhelp</strong> demonstrates real-time 3D packaging previews and paid sample selections.</li>
+            <li><strong>Event Cup</strong> demonstrates interactive 3D cup configuration from one unit.</li>
+            <li><strong>noissue</strong> demonstrates sample packs, production proofs, and minimum-quantity test runs.</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>Overall conclusion:</strong> low MOQ, sampling, and 360° preview are competitive table stakes rather than a complete differentiation strategy. A defensible offer would need to outperform on the combined experience of full-color availability near 100 units, India-specific fulfillment, preview accuracy, transparent costs, quality assurance, and proof-to-repeat-order continuity.</p>
+    </div>
+
+    <nav class="tabs" aria-label="Report sections">
+      <button data-tab="overview">Executive view</button>
+      <button data-tab="market">Market research</button>
+      <button data-tab="competitors">Competitor analysis</button>
+      <button data-tab="findings">Findings & risks</button>
+      <button data-tab="sources">Sources</button>
+      <button data-tab="claims">Claim traceability</button>
+      <button class="active" data-tab="scope">MVP scope</button>
+      <button data-tab="history">Revision history</button>
+    </nav>
+
+    <section data-panel="overview" data-title="01 · Executive view">
+      <div class="card callout">
+        <h2>Research verdict</h2>
+        <p>The opportunity is plausible, but low minimum quantities and 360° preview are not defensible differentiators by themselves. Competitors already offer low-volume packaging, previews, samples, or proofs.</p>
+        <p>The strongest remaining hypothesis is narrower: an India-specific offer combining format-level availability, full-color economics at roughly 100 units, reliable quality, and a clearly defined sample-to-bulk workflow.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>What evidence supports</h3>
+          <ul>
+            <li>Indian cake boxes are available from 100 units.</li>
+            <li>Some international cup vendors offer 100-unit orders.</li>
+            <li>Real-time 3D preview already exists in packaging.</li>
+            <li>Samples, proofs, and low-quantity test runs are common.</li>
+            <li>Print complexity can sharply increase minimum quantities.</li>
+          </ul>
+        </div>
+        <div class="card warning">
+          <h3>What remains unproven</h3>
+          <ul>
+            <li>Demand and repeat frequency in the target segment.</li>
+            <li>Willingness to pay and contribution margin.</li>
+            <li>The best launch category and packaging format.</li>
+            <li>Whether a physical custom sample is necessary.</li>
+            <li>Whether 360° preview materially improves conversion.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Recommended discovery direction</h2>
+        <ol>
+          <li>Evaluate India-specific disposable beverage formats and full-color customization near 100 units.</li>
+          <li>Retain cake formats only if a measurable service gap emerges.</li>
+          <li>Obtain like-for-like supplier quotes at 100 units and likely reorder volumes.</li>
+          <li>Test digital proofs, material samples, production proofs, and paid test runs.</li>
+          <li>Validate that the mandatory 360° rendering accurately represents manufacturable output.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section data-panel="market" data-title="02 · Market research">
+      <div class="card callout">
+        <h2>Market research</h2>
+        <p>The researched market is low-volume custom-branded food and beverage packaging, with an initial focus on India and order sizes around 100 units. This is a bounded secondary-research scan intended to support MVP selection—not a complete market-sizing or investment study.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Observed customer need</h3>
+          <ul>
+            <li>Small businesses need packaging quantities below conventional manufacturing minimums.</li>
+            <li>Buyers need confidence that submitted artwork will produce an acceptable physical result.</li>
+            <li>Pricing, setup charges, proofing, shipping, and turnaround are difficult to compare.</li>
+            <li>A repeat-order workflow may reduce friction after artwork is approved.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Observed supply</h3>
+          <ul>
+            <li>100-unit custom cake boxes already exist in India.</li>
+            <li>100-unit cup ordering exists internationally for simple print configurations.</li>
+            <li>3D previews, digital proofs, sample packs, and test runs already exist.</li>
+            <li>Color complexity and packaging format materially affect minimum quantities.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Opportunity interpretation</h2>
+        <p><strong>Rejected thesis:</strong> low-volume custom packaging is broadly unavailable.</p>
+        <p><strong>Remaining hypothesis:</strong> India may still have a format-specific gap for approximately 100 full-color disposable cups combined with manufacturable 360° visualization, transparent costs, proof confidence, and a reliable sample-to-bulk journey.</p>
+        <p><strong>Important:</strong> this hypothesis is not validated demand. It requires buyer interviews, supplier quotes, margin analysis, and a paid pilot.</p>
+      </div>
+      <div class="card warning">
+        <h2>Research not yet completed</h2>
+        <ul>
+          <li>Total addressable market, serviceable market, or annual revenue sizing</li>
+          <li>India-specific demand volumes by packaging format</li>
+          <li>Primary interviews with cafés, bakeries, or beverage sellers</li>
+          <li>Comparable supplier quotes and contribution-margin analysis</li>
+          <li>Advertising cost and funnel conversion benchmarks</li>
+          <li>Food-contact and print-compliance assessment for the selected format</li>
+          <li>Technical cost and fidelity assessment for 360° rendering</li>
+        </ul>
+      </div>
+    </section>
+
+    <section data-panel="competitors" data-title="03 · Competitor analysis">
+      <div class="card">
+        <h2>Competitor and substitute comparison</h2>
+        <p class="lead">Evidence-backed comparison of the five suppliers used in the revised research package.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Market / format</th>
+                <th>Low-volume signal</th>
+                <th>Preview / proof</th>
+                <th>Relevance</th>
+                <th>Observed limitation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>PrintStop</strong></td>
+                <td>India · Cake boxes</td>
+                <td>100-box minimum</td>
+                <td>Design preview</td>
+                <td>Direct Indian benchmark for the Founder’s order-size hypothesis</td>
+                <td>Shows cake boxes are already served; not evidence of beverage-cup economics</td>
+              </tr>
+              <tr>
+                <td><strong>Packhelp</strong></td>
+                <td>International · General packaging</td>
+                <td>Small test quantities</td>
+                <td>Real-time 3D editor and sample selection</td>
+                <td>Demonstrates that visualization and sampling are established capabilities</td>
+                <td>Not an India-specific disposable-cup benchmark</td>
+              </tr>
+              <tr>
+                <td><strong>The Cup Store</strong></td>
+                <td>International · Custom cups</td>
+                <td>100 units for one-color artwork</td>
+                <td>Digital art proofs</td>
+                <td>Strong evidence that cup print complexity changes minimum quantities</td>
+                <td>Two or three colors raise minimums to 5,000 or 10,000 units</td>
+              </tr>
+              <tr>
+                <td><strong>Event Cup</strong></td>
+                <td>Europe · Reusable cups</td>
+                <td>From one unit</td>
+                <td>Instant interactive 3D preview</td>
+                <td>Demonstrates technical feasibility and buyer-facing precedent for 360° preview</td>
+                <td>Reusable European product differs from Indian disposable food packaging</td>
+              </tr>
+              <tr>
+                <td><strong>noissue</strong></td>
+                <td>International · Sustainable packaging</td>
+                <td>Lowest listed quantity as test run</td>
+                <td>Sample packs and pre-production proofs</td>
+                <td>Shows multiple alternatives to producing a one-off custom physical sample</td>
+                <td>Does not directly validate 100-unit Indian cup fulfillment</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card warning">
+          <h3>Competitive table stakes</h3>
+          <ul>
+            <li>Artwork upload or editor</li>
+            <li>Digital or interactive preview</li>
+            <li>Proofing or sample mechanism</li>
+            <li>Quantity-based pricing</li>
+            <li>Order tracking and delivery</li>
+          </ul>
+        </div>
+        <div class="card callout">
+          <h3>Possible differentiation to validate</h3>
+          <ul>
+            <li>Full-color economics around 100 units</li>
+            <li>India-specific supplier and delivery network</li>
+            <li>Preview mapped to actual supplier dielines</li>
+            <li>Transparent all-in costs</li>
+            <li>Reliable proof-to-repeat-order continuity</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card risk">
+        <h2>Competitive conclusion</h2>
+        <p>No evidence supports positioning the product as the first low-MOQ packaging platform or the first to offer 360° preview. Any defensible positioning must be narrower and proven through Indian buyer behavior, supplier capability, quality, speed, and economics.</p>
+      </div>
+    </section>
+
+    <section data-panel="findings" data-title="04 · Findings and risks">
+      <div class="card">
+        <h2>Market findings</h2>
+        <ul>
+          <li><strong>PrintStop:</strong> Indian custom cake boxes at a 100-box minimum, with food-grade materials, preview, and India-wide delivery.</li>
+          <li><strong>The Cup Store:</strong> 100-unit custom cups for one-color logos; minimums rise sharply with additional colors.</li>
+          <li><strong>Packhelp:</strong> real-time 3D editor, test quantities, and a paid packaging-sample selection.</li>
+          <li><strong>Event Cup:</strong> instant 3D cup configuration from one unit, although focused on reusable European products.</li>
+          <li><strong>noissue:</strong> sample packs, production proofs, and lowest-quantity custom-design test runs.</li>
+        </ul>
+      </div>
+      <div class="card risk">
+        <h2>Material risks</h2>
+        <ul>
+          <li>Weak differentiation in already-served categories.</li>
+          <li>Uneconomic low-volume production and fulfillment.</li>
+          <li>Mismatch between 360° preview and manufactured output.</li>
+          <li>Slow turnaround or inconsistent print quality.</li>
+          <li>Low sample-to-bulk conversion.</li>
+          <li>Undefined artwork validation, proofing, and revision operations.</li>
+          <li>Ambiguous one-week promise: decision, production, or delivery.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section data-panel="sources" data-title="05 · Verified sources">
+      <div class="card source">
+        <span class="badge">SRC-1</span>
+        <div><h3>PrintStop — Custom Cake Boxes</h3><p>India benchmark for 100-unit custom cake boxes, preview, food-grade materials, and delivery.</p><a href="https://www.printstop.co.in/cake-boxes/" target="_blank" rel="noreferrer">Open verified source ↗</a></div>
+      </div>
+      <div class="card source">
+        <span class="badge">SRC-2</span>
+        <div><h3>Packhelp — Custom Packaging</h3><p>Real-time 3D packaging editor, low test quantities, and paid sample selection.</p><a href="https://packhelp.com/?lang=en" target="_blank" rel="noreferrer">Open verified source ↗</a></div>
+      </div>
+      <div class="card source">
+        <span class="badge">SRC-3</span>
+        <div><h3>The Cup Store — FAQ</h3><p>100-unit one-color cup orders, proofing, color-based minimum thresholds, and production timing.</p><a href="https://thecupstore.com/pages/faq" target="_blank" rel="noreferrer">Open verified source ↗</a></div>
+      </div>
+      <div class="card source">
+        <span class="badge">SRC-4</span>
+        <div><h3>Event Cup — Custom Reusable Cups</h3><p>Instant 3D configurator and customization from one unit in a European reusable-cup context.</p><a href="https://www.event-cup.com/en/" target="_blank" rel="noreferrer">Open verified source ↗</a></div>
+      </div>
+      <div class="card source">
+        <span class="badge">SRC-5</span>
+        <div><h3>noissue — Samples and Proofs</h3><p>Pre-designed samples, custom test runs at listed minimums, and pre-production proofs.</p><a href="https://help.noissue.co/hc/en-us/articles/51027579583769-Can-I-get-a-sample-before-I-order" target="_blank" rel="noreferrer">Open verified source ↗</a></div>
+      </div>
+    </section>
+
+    <section data-panel="claims" data-title="06 · Claim traceability">
+      <div id="claims"></div>
+    </section>
+
+    <section class="active" data-panel="scope" data-title="07 · MVP scope">
+      <div class="card callout">
+        <div class="eyebrow">Gate 3 · Awaiting Founder Approval</div>
+        <h2>Recommended MVP scope</h2>
+        <p>Launch a deliberately narrow pilot for India-based independent cafés and small beverage sellers seeking approximately 100 full-color branded disposable paper cups.</p>
+        <p>The proposition is not “low MOQ” or “3D preview” alone. It is a trustworthy, manufacturable preview and proof workflow that helps buyers confidently approve and reorder branded cups.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Target customer</h3>
+          <p>India-based independent cafés and small beverage sellers purchasing around 100 disposable paper cups per order.</p>
+          <span class="tag">Small business</span>
+          <span class="tag">India</span>
+          <span class="tag">~100 units</span>
+          <span class="tag">Full-color cups</span>
+        </div>
+        <div class="card">
+          <h3>Core value</h3>
+          <p>Configure one standardized cup, inspect an accurate 360° preview, approve it through the least-cost acceptable proof, and place or repeat an order with transparent pricing.</p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Smallest complete journey</h2>
+        <ol>
+          <li>Buyer enters through the website and selects the single supported cup format.</li>
+          <li>Buyer uploads full-color artwork.</li>
+          <li>The platform checks supplier-specific manufacturability constraints.</li>
+          <li>Buyer reviews the mandatory 360° packaging preview.</li>
+          <li>Buyer sees unit price, artwork, proof, tax, and shipping charges.</li>
+          <li>Buyer approves and pays for the selected proof or test-order path.</li>
+          <li>Buyer tracks status, receives the proof or test order, and records acceptance.</li>
+          <li>Buyer places a follow-on order using the approved artwork.</li>
+        </ol>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Priority 1 · Required</h3>
+          <ul>
+            <li>One disposable paper-cup format</li>
+            <li>Approximately 100-unit ordering</li>
+            <li>Full-color artwork upload</li>
+            <li>Manufacturability checks</li>
+            <li>Mandatory 360° preview</li>
+            <li>Transparent price and charges</li>
+            <li>Proof approval, payment, and tracking</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Priority 2 · Validate and select</h3>
+          <ul>
+            <li>One proof path: digital, material, or paid printed test run</li>
+            <li>Supplier-specific artwork constraints</li>
+            <li>Revision handling</li>
+            <li>Direct reorder using approved artwork</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card warning">
+        <h2>Explicit non-goals</h2>
+        <div class="grid">
+          <ul>
+            <li>Cake packaging</li>
+            <li>Multiple cup sizes or materials</li>
+            <li>Other beverage-packaging formats</li>
+            <li>Broad packaging marketplace</li>
+            <li>AI-assisted design</li>
+          </ul>
+          <ul>
+            <li>Automatic artwork creation</li>
+            <li>One-week production or delivery guarantees</li>
+            <li>International expansion</li>
+            <li>Subscriptions</li>
+            <li>Supplier self-service onboarding</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Pilot success gate</h2>
+        <div class="metrics">
+          <div class="metric"><strong>10</strong><span>Qualified target buyers</span></div>
+          <div class="metric"><strong>3+</strong><span>Paid proof/test orders</span></div>
+          <div class="metric"><strong>2+</strong><span>Follow-on orders</span></div>
+          <div class="metric"><strong>&gt; ₹0</strong><span>Contribution margin per order</span></div>
+        </div>
+        <p class="meta">Follow-on conversion is measured within seven calendar days after the buyer receives and accepts the proof or test order. It is not a promise of production or delivery within one week.</p>
+      </div>
+      <div class="card risk">
+        <h2>Approval implications</h2>
+        <p>Approving this scope selects the product hypothesis for requirements definition. It does not validate demand, approve engineering implementation, promise fulfillment timing, or authorize building the generated product.</p>
+      </div>
+    </section>
+
+    <section data-panel="history" data-title="08 · Revision history">
+      <div class="card warning">
+        <h2>Why the evidence was revised</h2>
+        <p>The first research package contained a syntactically valid URL whose page content did not match its recorded title or the beverage-cup claims it supported. Research Evidence Approval was withheld.</p>
+        <p>The original package was archived, the source-verification instructions were strengthened, and the research stages were rerun. The revised package removed the mismatched record and reduced the registry from 11 sources and 17 claims to 5 sources and 13 better-aligned claims.</p>
+      </div>
+      <div class="card">
+        <h3>Governance result</h3>
+        <ul>
+          <li>Founder Intent remained approved and unchanged.</li>
+          <li>Previous evidence remains preserved for audit.</li>
+          <li>Research Evidence Approval binds to the revised source and claim hashes.</li>
+          <li>No Product Strategy stage has started yet.</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="footer">Generated from AI-EOS run <code>run_2f2601fa-9b66-4f5b-9045-5f4149253cb3</code>. This dashboard is the human-readable approval view; persisted Markdown and JSON artifacts remain the machine-authoritative record.</p>
+  </main>
+  <script>
+    const claims = [
+      ["CLM-1","external_fact","high","PrintStop offers custom cake boxes in India with a minimum quantity of 100 boxes, full-color or black-and-white personalization, and a design-preview step before production.","SRC-1"],
+      ["CLM-2","external_fact","high","PrintStop states that its custom food-packaging boxes are food-grade and that it delivers across India.","SRC-1"],
+      ["CLM-3","external_fact","high","Packhelp provides a real-time 3D packaging editor and supports small test quantities through wholesale volumes.","SRC-2"],
+      ["CLM-4","external_fact","high","Packhelp offers a selection of up to eight packaging samples for €5.","SRC-2"],
+      ["CLM-5","external_fact","high","The Cup Store starts most custom cups at 100 one-color units, with sharply higher minimums for more colors.","SRC-3"],
+      ["CLM-6","external_fact","high","The Cup Store provides digital proofs and states 7–10 working days of production below 5,000 units, excluding shipping.","SRC-3"],
+      ["CLM-7","external_fact","high","Event Cup’s configurator accepts artwork and produces an instant 3D preview.","SRC-4"],
+      ["CLM-8","external_fact","high","Event Cup advertises customization from one reusable cup, manufactured and printed in Europe.","SRC-4"],
+      ["CLM-9","external_fact","high","noissue offers sample packs, minimum-quantity test runs, and pre-production expert proofs.","SRC-5"],
+      ["CLM-10","inference","high","The hypothesis that approximately 100-unit custom packaging is broadly unserved is contradicted.","SRC-1 · SRC-3"],
+      ["CLM-11","inference","high","360° or real-time 3D preview is unlikely to be sufficient as a standalone differentiator.","SRC-2 · SRC-4"],
+      ["CLM-12","inference","high","Sample ordering is not unique, although competitors implement it through different proof and test-run models.","SRC-2 · SRC-5"],
+      ["CLM-13","inference","high","Print complexity is a material segmentation variable because additional colors can sharply increase minimum quantities.","SRC-3"]
+    ];
+    document.querySelector("#claims").innerHTML = claims.map(([id,type,confidence,text,sources]) => `
+      <article class="card claim ${type === "inference" ? "inference" : ""}">
+        <div><span class="badge">${id}</span><span class="tag">${type.replace("_"," ")}</span><span class="tag">${confidence} confidence</span></div>
+        <p>${text}</p>
+        <div class="meta">Evidence: ${sources}</div>
+      </article>`).join("");
+    document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => {
+      document.querySelector(`[data-panel="${button.dataset.tab}"]`).scrollIntoView({behavior: "smooth"});
+    }));
+  </script>
+</body>
+</html>
