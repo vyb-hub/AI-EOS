@@ -147,6 +147,20 @@ discovery
     );
   });
 
+discovery
+  .command("decide")
+  .argument("<run-id>")
+  .description("record explicit Founder decisions after a needs_changes readiness review")
+  .requiredOption("--file <packet-path>")
+  .action(async (runId: string, options: { file: string }) => {
+    printState(
+      await (await createRuntime()).recordFounderDecisions(
+        runId,
+        resolve(projectRoot(), options.file)
+      )
+    );
+  });
+
 program
   .command("approve")
   .argument("<run-id>")

@@ -124,6 +124,29 @@ export const founderResponseSchema = z.object({
   notes: z.string().optional()
 });
 
+export const founderDecisionPacketSchema = z.object({
+  schemaVersion: z.literal(1),
+  packetId: z.string().min(1),
+  runId: z.string().min(1),
+  actor: z.literal("founder"),
+  submittedAt: z.string().datetime({ offset: true }),
+  decisions: z
+    .array(
+      z.object({
+        decisionId: z.string().min(1),
+        question: z.string().min(1),
+        decision: z.string().min(1),
+        rationale: z.string().min(1).optional()
+      })
+    )
+    .min(1)
+    .refine(
+      (decisions) => new Set(decisions.map(({ decisionId }) => decisionId)).size === decisions.length,
+      { message: "Founder decision IDs must be unique within a packet." }
+    ),
+  notes: z.string().optional()
+});
+
 export const projectConfigSchema = z.object({
   schemaVersion: z.literal(1),
   project: z.object({

@@ -111,6 +111,22 @@ Journey, Pilot Economics, Readiness Review, blocked-or-ready Engineering
 Handoff Status, Knowledge Capture, and the final decision. Research breadth
 remains bounded; information architecture remains complete.
 
+The completed dashboard promotes persisted readiness actions into a numbered
+Founder Roadmap near the top of the dossier. Use it as the execution sequence;
+the full underlying findings, decisions, and any additional actions remain in
+the evidence trail below.
+
+Record explicit decisions after a `needs_changes` readiness review with a
+schema-versioned Founder decision packet:
+
+```text
+node dist/src/cli.js --project <project-path> discovery decide <run-id> --file <packet-path>
+```
+
+Each decision has a stable `decisionId`, the question presented to the
+Founder, the exact decision, and an optional rationale. This regenerates the
+dashboard and dossier but does not change readiness status or authorize launch.
+
 The Engineering Charter remains proposed. Product Discovery does not start
 Feature Development, modify application source, commit, push, publish, or
 deploy.

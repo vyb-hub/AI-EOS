@@ -14,7 +14,7 @@ import type {
 import { validateEvidence } from "./evidence.js";
 import { featureDevelopmentFlow, flowById, productDiscoveryFlow } from "./flow.js";
 import { newId, sha256 } from "./hash.js";
-import { founderResponseSchema, stageOutputSchema } from "./schemas.js";
+import { founderDecisionPacketSchema, founderResponseSchema, stageOutputSchema } from "./schemas.js";
 import { FileStore } from "./store.js";
 import type { ProductBriefSection } from "./product-brief.js";
 
@@ -265,6 +265,49 @@ export class Runtime {
       invalidatedStage: "founder-intent"
     });
     return this.runUntilHalt(state);
+  }
+
+  async recordFounderDecisions(
+    runId: string,
+    packetPath: string
+  ): Promise<RunState> {
+    const state = await this.store.loadState(runId);
+    if (
+      state.flowId !== "product-discovery" ||
+      state.status !== "failed" ||
+      !state.lastError?.includes("outcome needs_changes")
+    ) {
+      throw new Error(
+        `Run ${runId} is not at a post-readiness Founder decision checkpoint.`
+      );
+    }
+    const absolutePath = resolve(packetPath);
+    this.assertInsideProject(absolutePath);
+    const raw = await readFile(absolutePath, "utf8");
+    const packet = founderDecisionPacketSchema.parse(JSON.parse(raw));
+    if (packet.runId !== runId) {
+      throw new Error("Founder decision packet does not match the discovery run.");
+    }
+    await this.store.saveFounderDecisionPacket(packet, raw);
+    const brief = await this.store.loadProductBrief(runId);
+    const decisions = new Map(
+      (brief.founderDecisions ?? []).map((decision) => [decision.decisionId, decision])
+    );
+    for (const decision of packet.decisions) {
+      decisions.set(decision.decisionId, decision);
+    }
+    brief.founderDecisions = [...decisions.values()];
+    brief.nextAction = `${brief.founderDecisions.length} Founder decision(s) recorded. Complete the remaining professional evidence and rerun Product Readiness Review.`;
+    brief.updatedAt = new Date().toISOString();
+    await this.store.saveProductBrief(brief);
+    await this.store.saveDecisionDossier(runId);
+    state.updatedAt = brief.updatedAt;
+    await this.store.saveState(state);
+    await this.event(state, "founder.decisions_recorded", "product-readiness-review", {
+      packetId: packet.packetId,
+      decisionIds: packet.decisions.map(({ decisionId }) => decisionId)
+    });
+    return state;
   }
 
   async reviseResearch(runId: string, reason: string): Promise<RunState> {

@@ -10,6 +10,7 @@ import { dirname, join, resolve } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import type {
   ApprovalRecord,
+  FounderDecisionPacket,
   FounderResponse,
   ProviderResult,
   RunState,
@@ -166,6 +167,19 @@ export class FileStore {
     );
     await this.atomicWrite(rawPath, raw);
     await this.atomicWrite(parsedPath, `${JSON.stringify(response, null, 2)}\n`);
+    return parsedPath;
+  }
+
+  async saveFounderDecisionPacket(
+    packet: FounderDecisionPacket,
+    raw: string
+  ): Promise<string> {
+    const dir = join(this.runDir(packet.runId), "founder-decisions");
+    await mkdir(dir, { recursive: true });
+    const rawPath = join(dir, `${packet.packetId}.raw.json`);
+    const parsedPath = join(dir, `${packet.packetId}.json`);
+    await this.atomicWrite(rawPath, raw);
+    await this.atomicWrite(parsedPath, `${JSON.stringify(packet, null, 2)}\n`);
     return parsedPath;
   }
 

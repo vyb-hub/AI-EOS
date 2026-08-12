@@ -172,6 +172,23 @@ export interface FounderResponse {
   notes?: string | undefined;
 }
 
+export interface FounderDecision {
+  decisionId: string;
+  question: string;
+  decision: string;
+  rationale?: string | undefined;
+}
+
+export interface FounderDecisionPacket {
+  schemaVersion: 1;
+  packetId: string;
+  runId: string;
+  actor: "founder";
+  submittedAt: string;
+  decisions: FounderDecision[];
+  notes?: string | undefined;
+}
+
 export interface EvidenceSource {
   sourceId: string;
   title: string;

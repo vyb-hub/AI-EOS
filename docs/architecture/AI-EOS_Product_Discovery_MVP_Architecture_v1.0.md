@@ -220,6 +220,20 @@ and Final Decision sections and writes `decision-dossier.html`. An incomplete
 readiness result continues to block Engineering handoff and material capital;
 it no longer removes the review or final dossier from Founder view.
 
+When persisted readiness actions exist, the Founder dashboard promotes up to
+seven of them into a numbered Founder Roadmap near the top of the page and
+labels the next governed gate. Any additional actions remain visible in the
+complete evidence trail. This is a deterministic presentation of persisted
+readiness output; the renderer does not create new recommendations or alter
+governed evidence.
+
+After a `needs_changes` readiness outcome, the Runtime may accept an explicit
+Founder decision packet through `discovery decide`. It persists the raw and
+validated packet append-only under `founder-decisions/`, merges decisions by
+stable ID into the Founder dashboard, and regenerates the decision dossier.
+Recording decisions does not change the terminal readiness outcome, approve
+professional evidence, or authorize implementation or spending.
+
 ## Codex CLI Hardening
 
 Before EC-004 implementation:

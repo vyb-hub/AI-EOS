@@ -75,7 +75,25 @@ test("Founder brief presents needs_changes as a decision checkpoint", () => {
     totalStages: 5,
     nextAction: "Stage product-readiness-review halted with outcome needs_changes: pilot economics are missing.",
     competitors: [],
-    sections: [],
+    sections: [
+      {
+        stageId: "product-readiness-review",
+        summary: "Pilot decisions remain unresolved.",
+        findings: ["The first discipline is not selected."],
+        decisions: ["Do not launch yet."],
+        nextActions: [
+          "Choose the first discipline.",
+          "Lock the pilot format and economics.",
+          "Validate the instructor and site.",
+          "Test paid demand.",
+          "Revise the complete dossier.",
+          "Return for Product Readiness Review.",
+          "Proceed, adjust, or stop from evidence.",
+          "Retain detailed supporting action."
+        ],
+        completedAt: "2026-08-10T15:00:00.000Z"
+      }
+    ],
     updatedAt: "2026-08-10T15:00:00.000Z"
   });
 
@@ -83,6 +101,11 @@ test("Founder brief presents needs_changes as a decision checkpoint", () => {
   assert.match(html, /Founder decisions required/);
   assert.match(html, /needs-decisions/);
   assert.match(html, /class="card action needs-decisions"/);
+  assert.match(html, /Founder Roadmap/);
+  assert.match(html, /7 prioritized steps/);
+  assert.match(html, /Choose the first discipline/);
+  assert.match(html, /1 additional action is retained in the evidence trail/);
+  assert.match(html, /Next gate · Product Readiness Review/);
   assert.doesNotMatch(html, /Working now/);
 });
 
@@ -566,6 +589,44 @@ test("Fast discovery persists a needs_changes readiness review and decision doss
   assert.match(dossier, /knowledge-capture/);
   assert.match(dossier, /final-decision/);
   assert.match(dossier, /needs Founder decisions/);
+
+  const decisionPacketPath = join(root, "founder-decisions.json");
+  await writeFile(
+    decisionPacketPath,
+    `${JSON.stringify({
+      schemaVersion: 1,
+      packetId: "decisions_koottam_1",
+      runId: state.runId,
+      actor: "founder",
+      submittedAt: new Date().toISOString(),
+      decisions: [
+        {
+          decisionId: "first-discipline",
+          question: "Which discipline launches first?",
+          decision: "Dance"
+        }
+      ]
+    })}\n`,
+    "utf8"
+  );
+  state = await runtime.recordFounderDecisions(state.runId, decisionPacketPath);
+  assert.equal(state.status, "failed");
+  const revisedDossier = await readFile(
+    join(store.runDir(state.runId), "decision-dossier.html"),
+    "utf8"
+  );
+  assert.match(revisedDossier, /Founder Decisions/);
+  assert.match(revisedDossier, /Founder approvals/);
+  assert.match(revisedDossier, /Which discipline launches first/);
+  assert.match(revisedDossier, />Dance</);
+  assert.match(revisedDossier, /Readiness review still required/);
+  assert.match(
+    await readFile(
+      join(store.runDir(state.runId), "founder-decisions", "decisions_koottam_1.json"),
+      "utf8"
+    ),
+    /first-discipline/
+  );
 });
 
 test("persists stage performance metrics for successful provider attempts", async () => {

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "packetId": "koottam_pilot_decisions_2026_08_11",
+  "runId": "run_8e6ebe53-2687-4066-bb3d-3d1aaa2b6ec6",
+  "actor": "founder",
+  "submittedAt": "2026-08-11T01:15:00+05:30",
+  "decisions": [
+    {
+      "decisionId": "pilot-discipline",
+      "question": "Which discipline launches first?",
+      "decision": "Dance."
+    },
+    {
+      "decisionId": "pilot-format",
+      "question": "What is the first cohort format?",
+      "decision": "One adult cohort over 8 weeks, with two 60–75 minute classes per week."
+    },
+    {
+      "decisionId": "cohort-capacity",
+      "question": "What are the cohort capacity and launch threshold?",
+      "decision": "Maximum 12 participants; launch only with at least 8 fully paid participants."
+    },
+    {
+      "decisionId": "pilot-pricing",
+      "question": "What are the pilot price and payment terms?",
+      "decision": "₹4,000 total: ₹500 refundable reservation deposit and ₹3,500 due before the first class. Refund the deposit if Koottam cancels or the 8-person launch threshold is not reached."
+    },
+    {
+      "decisionId": "financial-risk-limits",
+      "question": "What financial risk limits govern validation?",
+      "decision": "Maximum reversible site preparation of ₹1,00,000; maximum operating loss of ₹25,000 per month; maximum validation runway of 3 months; no permanent construction or broader ₹20 lakh build during validation."
+    },
+    {
+      "decisionId": "success-thresholds",
+      "question": "What results determine pilot success, redesign, or stop?",
+      "decision": "Launch with at least 8 fully paid participants; achieve at least 80% average attendance, 70% completion, and 40% renewal or next-cohort commitment; reach non-negative contribution margin by the second completed cohort; stop or redesign after two consecutive recruitment attempts below 8 paid participants."
+    },
+    {
+      "decisionId": "operating-ownership",
+      "question": "Who owns pilot delivery and operating decisions?",
+      "decision": "One contracted dance instructor owns curriculum, teaching, attendance confirmation, and class safety. One named pilot coordinator owns inquiries, payments, reminders, site opening and closing, weather decisions, refunds, and incident escalation; a backup is required before launch. The Founder retains authority over spending, pricing changes, launch, cancellation, and continuation."
+    }
+  ],
+  "notes": "Explicit Founder approvals captured conversationally on 11 August 2026. Professional site, instructor, legal, insurance, cost, and paid-demand evidence remain outstanding."
+}
